@@ -1,0 +1,22 @@
+# Dependencies and builds
+node_modules/
+.nuxt/
+.output/
+dist/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Supabase local
+supabase/.branches
+supabase/.temp
+
+# Local tool settings
+.claude/settings.local.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+~$*
