@@ -129,9 +129,13 @@ abc.otimetech.app ─┘          │                                  │
 ```
 Criar conta (Supabase Auth)
    → trigger on_auth_user_created → handle_new_user() → public.users
-   → "Criar empresa"  → criar_empresa()            → vira administrador (aprovado)
-   → "Entrar em empresa" → informa CNPJ → solicitar_acesso_empresa() → pendente
-        → admin: listar_usuarios_empresa() → aprovar_usuario() | rejeitar_usuario()
+   → "Criar empresa"  → criar_empresa(razão, fantasia, cnpj, matrícula) → vira administrador (aprovado)
+   → "Entrar em empresa" → informa CNPJ → solicitar_acesso_empresa() → pendente (tecnico)
+        → admin: listar_usuarios_empresa()
+              → aprovar_usuario(papel, matrícula) | rejeitar_usuario()
+        → admin: alterar_papel_usuario() | desativar_usuario() | reativar_usuario()
+              (empresa nunca fica sem administrador ativo)
+   → membros: listar_colegas_empresa() → nome e foto dos colegas
 ```
 
 ---
@@ -199,48 +203,73 @@ Trilha de auditoria: criação, início, fotos adicionadas, assinatura, conclus�
 
 ## 6. Banco de dados — estado atual
 
-Levantado em 2026-09-29 diretamente no projeto Supabase. Schema criado pelo SQL Editor; versionado na migration base `supabase/migrations/20260929000000_baseline.sql` (ainda não registrada no histórico remoto).
+Atualizado em 2026-09-29. Migrations em `supabase/migrations/`, todas registradas no histórico remoto:
+
+| Versão | Nome | Conteúdo |
+|---|---|---|
+| `20260929000000` | `baseline` | Schema original criado pelo SQL Editor (reconstruído do catálogo) |
+| `20260930022111` | `correcoes_fundacao` | Correções P1–P7, P9–P11, P13, P14 + matrícula |
 
 ### Tabelas (`public`)
 
 | Tabela | Colunas principais | RLS |
 |---|---|---|
 | `users` | `id` (uuid, FK `auth.users`), `nome`, `email`, `telefone`, `foto`, `ativo`, `created_at` | ✅ |
-| `empresas` | `id` (bigint identity), `razao_social`, `nome_fantasia`, `cnpj` (único, só dígitos), `email`, `telefone`, `endereco`, `numero`, `complemento`, `bairro`, `cidade`, `estado`, `cep`, `logo`, `ativo`, `created_at` | ✅ |
-| `empresa_usuarios` | `id`, `id_empresa`, `id_usuario`, `tipo_acesso` (check: administrador/supervisor/executor; default `'tecnico'`), `aprovado`, `ativo`, `data_aprovacao`, `aprovado_por`, `created_at`; único `(id_empresa, id_usuario)` | ✅ |
+| `empresas` | `id` (bigint identity), `razao_social`, `nome_fantasia`, `cnpj` (único; maiúsculas sem máscara; check `cnpj_valido`), `email`, `telefone`, `endereco`, `numero`, `complemento`, `bairro`, `cidade`, `estado`, `cep`, `logo`, `ativo`, `created_at` | ✅ |
+| `empresa_usuarios` | `id`, `id_empresa`, `id_usuario`, `tipo_acesso` (administrador/supervisor/tecnico; default `tecnico`), `matricula` (obrigatória se aprovado; única por empresa), `aprovado`, `ativo`, `data_aprovacao`, `aprovado_por`, `created_at`; único `(id_empresa, id_usuario)` | ✅ |
+
+### Colunas editáveis diretamente pelo cliente (`authenticated`)
+- `users`: somente `nome`, `telefone`, `foto` (e-mail vem do Auth; `ativo` é do sistema).
+- `empresas` (só admin, via RLS): dados cadastrais e `logo`. **Não**: `cnpj`, `ativo`.
+- `empresa_usuarios`: nenhuma escrita direta; só via RPC.
 
 ### Funções
 
-| Função | Tipo | Descrição |
+| Função | Acesso | Descrição |
 |---|---|---|
-| `handle_new_user()` | trigger, SECURITY DEFINER | Cria `public.users` a partir de `auth.users` (nome vem de `raw_user_meta_data->>'nome'`) |
-| `criar_empresa(razao_social, nome_fantasia, cnpj)` | RPC, SECURITY DEFINER | Cria empresa e vincula criador como administrador aprovado |
-| `solicitar_acesso_empresa(cnpj)` | RPC, SECURITY DEFINER | Cria vínculo pendente com a empresa do CNPJ |
-| `listar_usuarios_empresa(id_empresa)` | RPC, SECURITY DEFINER | Lista vínculos da empresa (somente admin) |
-| `aprovar_usuario(id_empresa, id_usuario, tipo_acesso)` | RPC, SECURITY DEFINER | Aprova e define papel (somente admin) |
-| `rejeitar_usuario(id_empresa, id_usuario)` | RPC, SECURITY DEFINER | Exclui solicitação pendente (somente admin) |
-| `usuario_pertence_empresa(id_empresa)` | helper RLS | Usuário vinculado, aprovado e ativo |
-| `usuario_admin_empresa(id_empresa)` | helper RLS | Usuário é administrador aprovado e ativo |
+| `criar_empresa(razao_social, nome_fantasia, cnpj, matricula)` | authenticated | Valida CNPJ, cria empresa e vincula criador como administrador aprovado |
+| `solicitar_acesso_empresa(cnpj)` | authenticated | Cria vínculo pendente (`tecnico`) com a empresa do CNPJ |
+| `listar_usuarios_empresa(id_empresa)` | authenticated (só admin) | Lista vínculos com nome, e-mail, foto, matrícula, papel e status |
+| `aprovar_usuario(id_empresa, id_usuario, tipo_acesso, matricula)` | authenticated (só admin) | Aprova **somente pendentes**, define papel e matrícula |
+| `alterar_papel_usuario(id_empresa, id_usuario, tipo_acesso)` | authenticated (só admin) | Troca papel de usuário aprovado; bloqueia remover o último admin |
+| `desativar_usuario(id_empresa, id_usuario)` | authenticated (só admin) | Desativa vínculo; bloqueia desativar o último admin |
+| `reativar_usuario(id_empresa, id_usuario)` | authenticated (só admin) | Reativa vínculo desativado |
+| `rejeitar_usuario(id_empresa, id_usuario)` | authenticated (só admin) | Exclui solicitação pendente |
+| `listar_colegas_empresa(id_empresa)` | authenticated (membro) | Nome e foto dos membros ativos |
+| `usuario_pertence_empresa(id_empresa)` | helper RLS | Vínculo aprovado + ativo + empresa ativa |
+| `usuario_admin_empresa(id_empresa)` | helper RLS | Idem, com papel administrador |
+| `normalizar_cnpj(cnpj)` / `cnpj_valido(cnpj)` | authenticated | Normalização e validação de CNPJ numérico/alfanumérico |
+| `contar_admins_ativos(id_empresa)` | interno | Usado nas regras do último admin |
+| `handle_new_user()` / `handle_user_email_change()` | interno (trigger) | Criação de perfil e sincronização de e-mail |
 
-### Trigger
-- `on_auth_user_created` em `auth.users` → `handle_new_user()`.
+- `anon` não executa nenhuma função. Funções novas em `public` não recebem EXECUTE automático para `anon`/PUBLIC (default privileges); conceder explicitamente quando necessário (ex.: `resolver_tenant`).
+- Retorno padrão das RPCs de escrita: `json` `{ success, message, ... }`.
+
+### Triggers
+- `on_auth_user_created` (insert em `auth.users`) → `handle_new_user()`.
+- `on_auth_user_email_changed` (update de e-mail em `auth.users`) → `handle_user_email_change()`.
 
 ### Políticas RLS
 
 | Tabela | Política | Operação | Regra |
 |---|---|---|---|
-| `users` | `usuario_visualiza_proprio_perfil` | SELECT | `id = auth.uid()` |
-| `users` | `usuario_atualiza_proprio_perfil` | UPDATE | `id = auth.uid()` |
+| `users` | `usuario_visualiza_proprio_perfil` | SELECT | `id = (select auth.uid())` |
+| `users` | `usuario_atualiza_proprio_perfil` | UPDATE | `id = (select auth.uid())` |
 | `empresas` | `usuario_visualiza_empresa` | SELECT | `usuario_pertence_empresa(id)` |
 | `empresas` | `admin_atualiza_empresa` | UPDATE | `usuario_admin_empresa(id)` |
-| `empresa_usuarios` | `usuario_visualiza_proprio_vinculo` | SELECT | `id_usuario = auth.uid()` |
-| `empresa_usuarios` | `admin_visualiza_usuarios_empresa` | SELECT | `usuario_admin_empresa(id_empresa)` |
+| `empresa_usuarios` | `visualiza_vinculos` | SELECT | próprio vínculo ou admin da empresa |
 
 ### Índices
 - `empresas_cnpj_unique (cnpj)`
 - `empresa_usuarios_unique (id_empresa, id_usuario)`
+- `empresa_usuarios_matricula_unique (id_empresa, matricula)`
 - `idx_empresa_usuarios_usuario (id_usuario)`
 - `idx_empresa_usuarios_aprovado (id_empresa, aprovado)`
+- `idx_empresa_usuarios_aprovado_por (aprovado_por)`
+
+### Advisors (após a migration)
+- Segurança: restam avisos esperados de "authenticated executa SECURITY DEFINER" (RPCs com verificação interna) e P8.
+- Performance: só "índice não usado" (banco ainda sem dados).
 
 ---
 
@@ -274,18 +303,20 @@ checklist_itens
 
 | # | Severidade | Problema | Status |
 |---|---|---|---|
-| P1 | 🔴 Crítico | `solicitar_acesso_empresa()` insere `tipo_acesso = 'tecnico'`, mas o CHECK aceita só administrador/supervisor/executor. **Toda solicitação de acesso falha.** Default da coluna também é `'tecnico'`. | Aberto |
-| P2 | 🟠 Alto | Papéis divergentes: escopo (admin/supervisor/executor) × resumo do backend (admin/supervisor/planejador/técnico) × banco (admin/supervisor/executor). | Decidido: `administrador`/`supervisor`/`tecnico`; correção pendente junto com P1 |
-| P3 | 🟠 Alto | `aprovar_usuario()` altera qualquer vínculo ativo, inclusive já aprovado: admin pode rebaixar outros admins ou a si mesmo; empresa pode ficar sem administrador. | Aberto |
-| P4 | 🟡 Médio | Não existe função para desativar/reativar usuário (`ativo`). | Aberto |
-| P5 | 🟡 Médio | Validação de CNPJ só confere 14 dígitos (sem dígito verificador). Escopo cita CNPJ/CPF, mas CPF é rejeitado. | Aberto |
-| P6 | 🟡 Médio | `usuario_pertence_empresa()` não verifica `empresas.ativo`: empresa desativada continua acessível. | Aberto |
-| P7 | 🟠 Alto | Segurança: `anon` e `PUBLIC` têm EXECUTE em todas as funções SECURITY DEFINER (o `revoke` citado no `.docx` não está em vigor). | Aberto |
-| P8 | 🟡 Médio | Proteção contra senha vazada desativada no Auth. | Aberto |
-| P9 | 🟡 Médio | `users` só permite ver o próprio perfil; telas de O.S. precisarão ver nomes de colegas da mesma empresa. | Aberto |
-| P10 | 🔵 Baixo | Performance: policies usam `auth.uid()` sem `(select ...)`; FK `aprovado_por` sem índice; 2 policies SELECT permissivas em `empresa_usuarios`. | Aberto |
-| P11 | 🔵 Baixo | `users.email` não sincroniza quando o e-mail muda no Auth. | Aberto |
-| P12 | 🟠 Alto | Nenhuma migration versionada e projeto sem git: schema não reproduzível. | Parcial: git + baseline criados; falta registrar no histórico remoto |
+| P1 | 🔴 Crítico | `solicitar_acesso_empresa()` insere `tipo_acesso = 'tecnico'`, mas o CHECK aceita só administrador/supervisor/executor. **Toda solicitação de acesso falha.** Default da coluna também é `'tecnico'`. | ✅ Corrigido (2026-09-29) |
+| P2 | 🟠 Alto | Papéis divergentes: escopo (admin/supervisor/executor) × resumo do backend (admin/supervisor/planejador/técnico) × banco (admin/supervisor/executor). | ✅ Corrigido (2026-09-29) |
+| P3 | 🟠 Alto | `aprovar_usuario()` altera qualquer vínculo ativo, inclusive já aprovado: admin pode rebaixar outros admins ou a si mesmo; empresa pode ficar sem administrador. | ✅ Corrigido (2026-09-29) |
+| P4 | 🟡 Médio | Não existe função para desativar/reativar usuário (`ativo`). | ✅ Corrigido (2026-09-29) |
+| P5 | 🟡 Médio | Validação de CNPJ só confere 14 dígitos (sem dígito verificador). Decidido: somente CNPJ. | ✅ Corrigido (2026-09-29) |
+| P6 | 🟡 Médio | `usuario_pertence_empresa()` não verifica `empresas.ativo`: empresa desativada continua acessível. | ✅ Corrigido (2026-09-29) |
+| P7 | 🟠 Alto | Segurança: `anon` e `PUBLIC` têm EXECUTE em todas as funções SECURITY DEFINER (o `revoke` citado no `.docx` não está em vigor). | ✅ Corrigido (2026-09-29) |
+| P8 | 🟡 Médio | Proteção contra senha vazada desativada no Auth. | Manual: ativar no painel Supabase (Authentication → Policies); pode exigir plano Pro |
+| P9 | 🟡 Médio | `users` só permite ver o próprio perfil; telas de O.S. precisarão ver nomes de colegas da mesma empresa. | ✅ Corrigido (2026-09-29) |
+| P10 | 🔵 Baixo | Performance: policies usam `auth.uid()` sem `(select ...)`; FK `aprovado_por` sem índice; 2 policies SELECT permissivas em `empresa_usuarios`. | ✅ Corrigido (2026-09-29) |
+| P11 | 🔵 Baixo | `users.email` não sincroniza quando o e-mail muda no Auth. | ✅ Corrigido (2026-09-29) |
+| P13 | 🟠 Alto | Usuário pode alterar qualquer coluna do próprio perfil, inclusive `email` e `ativo`. | ✅ Corrigido (2026-09-29) |
+| P14 | 🟠 Alto | Administrador pode alterar `cnpj` e `ativo` da própria empresa (ex.: reativar empresa bloqueada). | ✅ Corrigido (2026-09-29) |
+| P12 | 🟠 Alto | Nenhuma migration versionada e projeto sem git: schema não reproduzível. | ✅ Corrigido (2026-09-29): git + migrations registradas no histórico remoto |
 
 ---
 
@@ -294,7 +325,7 @@ checklist_itens
 | Data | Decisão | Motivo |
 |---|---|---|
 | — | Vínculo usuário × empresa via tabela `empresa_usuarios` (N:N), não `id_empresa` em `users` | Um usuário pode participar de várias empresas com papéis diferentes |
-| — | CNPJ armazenado normalizado (só dígitos) | Máscara é responsabilidade da interface |
+| — | CNPJ armazenado normalizado (sem máscara; ver decisão sobre alfanumérico) | Máscara é responsabilidade da interface |
 | — | Quem cria a empresa vira administrador aprovado automaticamente | Fluxo de onboarding simples |
 | — | Rejeição exclui o registro pendente | Permite nova solicitação futura |
 | 2026-09-29 | Multi-tenant com banco Supabase compartilhado, isolamento por `id_empresa` + RLS | Custo e manutenção de um único projeto |
@@ -304,6 +335,11 @@ checklist_itens
 | 2026-09-29 | Papéis: `administrador`, `supervisor`, `tecnico` | Nome natural em pt-BR; planejador descartado |
 | 2026-09-29 | Domínios: subdomínio para todas as empresas no início; domínio próprio na Fase 7 | Wildcard, zero configuração por empresa |
 | 2026-09-29 | Hospedagem do frontend: VPS própria com Coolify | Escolha do responsável |
+| 2026-09-29 | Gestão de papéis: `aprovar_usuario` só aprova vínculos pendentes; nova função `alterar_papel_usuario` troca o papel de aprovados; a empresa nunca pode ficar sem administrador ativo | Evita rebaixamento indevido e empresa sem admin (P3) |
+| 2026-09-29 | Empresa identificada somente por CNPJ (CPF não aceito) | Definição do responsável (P5) |
+| 2026-09-29 | Todo usuário da empresa tem matrícula: identificação interna (O.S., PDF, relatórios), informada pelo admin ao aprovar, única dentro da empresa. Login continua por e-mail | Definição do responsável |
+| 2026-09-29 | CNPJ numérico e alfanumérico (IN RFB 2.229/2024), com dígito verificador; armazenado em maiúsculas sem máscara | Receita emite CNPJ alfanumérico desde jul/2026 |
+| 2026-09-29 | Colegas da mesma empresa veem apenas nome e foto uns dos outros | Privacidade (P9) |
 | 2026-09-29 | Em caso de dúvida, perguntar ao responsável antes de executar; a última palavra é sempre dele | Governança do projeto |
 | 2026-09-29 | Design: fonte Inter, paleta azul petróleo do modelo, mapeamento do menu lateral (`design.md` seção 7) e interface em pt-BR — confirmados | Aprovação do responsável |
 | 2026-09-29 | Estilo com Tailwind CSS (`@nuxtjs/tailwindcss`) no lugar de Twind | Twind está sem manutenção; Tailwind é o padrão no Nuxt |
@@ -336,7 +372,7 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 - [x] Primeiro commit e push para `origin/main` (repositório privado)
 - [x] Supabase CLI: `supabase init` (via `npx supabase`, v2.118.0)
 - [x] Migration base `supabase/migrations/20260929000000_baseline.sql` (reconstruída do catálogo via MCP; Docker não instalado)
-- [ ] Registrar a baseline como aplicada no histórico remoto (junto com a primeira migration de correção)
+- [x] Baseline registrada no histórico remoto
 
 ### Fase 1 — Fundação multi-tenant (banco)
 - [x] Tabela `users` + trigger `handle_new_user`
@@ -345,16 +381,10 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 - [x] RPCs: `criar_empresa`, `solicitar_acesso_empresa`, `listar_usuarios_empresa`, `aprovar_usuario`, `rejeitar_usuario`
 - [x] Helpers RLS: `usuario_pertence_empresa`, `usuario_admin_empresa`
 - [x] RLS em `users`, `empresas`, `empresa_usuarios`
-- [ ] Corrigir P1 (papel `tecnico` × CHECK)
-- [ ] Corrigir P3 (proteção de admins / último admin)
-- [ ] Corrigir P4 (desativar/reativar usuário)
-- [ ] Corrigir P5 (validação CNPJ/CPF)
-- [ ] Corrigir P6 (empresa inativa)
-- [ ] Corrigir P7 (revoke EXECUTE de `anon`/`PUBLIC`)
-- [ ] Corrigir P8 (proteção contra senha vazada)
-- [ ] Corrigir P9 (ver colegas da mesma empresa)
-- [ ] Corrigir P10 (performance das policies e índices)
-- [ ] Corrigir P11 (sincronizar e-mail)
+- [x] Migration `20260930022111_correcoes_fundacao.sql` aplicada: P1–P7, P9–P11, P13, P14 corrigidos (39/39 testes a seco antes de aplicar)
+- [x] Matrícula em `empresa_usuarios`
+- [x] RPCs `alterar_papel_usuario`, `desativar_usuario`, `reativar_usuario`, `listar_colegas_empresa`
+- [ ] P8: ativar proteção contra senha vazada no painel do Supabase (manual)
 - [ ] Campos de branding (cores, site, responsável, plano, status da assinatura)
 - [ ] Tabela `empresa_dominios` + RPC `resolver_tenant`
 
@@ -422,3 +452,7 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 | 2026-09-29 | Ambiente local: `git init`, `.gitignore`, `supabase init` e migration base reconstruída do banco via MCP (sem Docker). Nenhuma alteração no banco. |
 | 2026-09-29 | Remoto `origin` configurado para https://github.com/otimetech/Task-App. |
 | 2026-09-29 | Primeiro commit e push para `origin/main`. Versionados: documentação, `design_modelo.png`, `Escopo Projeto.docx`, configuração do MCP (`.mcp.json`, `.codex/`), skills do Supabase e pasta `supabase/`. Repositório privado. |
+| 2026-09-29 | Decididos: regra de gestão de papéis (P3), somente CNPJ para empresa (P5), matrícula para técnico, colegas veem só nome e foto (P9). |
+| 2026-09-29 | Matrícula definida (todos os usuários, informada pelo admin ao aprovar, única por empresa) e suporte a CNPJ alfanumérico. |
+| 2026-09-29 | Migration de correção `20260929010000_correcoes_fundacao.sql` escrita e testada a seco no banco (39/39 testes, rollback total, banco intacto). Novos problemas identificados: P13, P14. |
+| 2026-09-29 | Migration `correcoes_fundacao` aplicada no banco (versão `20260930022111`; arquivo local renomeado para a mesma versão). Baseline registrada no histórico remoto. P1–P7, P9–P14 corrigidos; P8 depende de ação manual no painel. Seção 6 atualizada. |
