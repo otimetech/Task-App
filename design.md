@@ -348,7 +348,7 @@ O modelo cobre apenas desktop. Regras de adaptação (pendente de modelo visual 
 |---|---|---|
 | Detalhe do equipamento (desktop) | ✅ Modelo aprovado | `design_modelo.png` |
 | Detalhe do equipamento (mobile) | ⬜ Pendente | Adaptação da seção 10 |
-| Login / cadastro | ⬜ Pendente | |
+| Login / cadastro / recuperar senha | ✅ Derivado dos tokens (2026-10-03) | `AuthCard` central sobre `bg-app`; marca da empresa no subdomínio |
 | Onboarding (criar/entrar em empresa) | ⬜ Pendente | |
 | Dashboard | ⬜ Pendente | |
 | Lista de O.S. | ⬜ Pendente | |
