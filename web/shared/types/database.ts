@@ -283,6 +283,7 @@ export type Database = {
         }[]
       }
       solicitar_acesso_empresa: { Args: { p_cnpj: string }; Returns: Json }
+      solicitar_acesso_empresa_por_id: { Args: { p_id_empresa: number }; Returns: Json }
       usuario_admin_empresa: { Args: { p_id_empresa: number }; Returns: boolean }
       usuario_pertence_empresa: { Args: { p_id_empresa: number }; Returns: boolean }
       validar_subdominio: { Args: { p_subdominio: string }; Returns: string }

@@ -216,6 +216,7 @@ Atualizado em 2026-10-03. Migrations em `supabase/migrations/`, todas registrada
 |---|---|---|
 | `20260929000000` | `baseline` | Schema original criado pelo SQL Editor (reconstruído do catálogo) |
 | `20260930022111` | `correcoes_fundacao` | Correções P1–P7, P9–P11, P13, P14 + matrícula |
+| `20261003183249` | `storage_logos` | Bucket público `logos` (escrita só admin, caminho `{id_empresa}/logo.<ext>`) + RPC `solicitar_acesso_empresa_por_id` |
 | `20261003180455` | `branding_dominios` | Branding/assinatura em `empresas`, `empresa_dominios`, subdomínio em `criar_empresa`, `resolver_tenant`, `listar_minhas_empresas` |
 
 ### Tabelas (`public`)
@@ -243,6 +244,7 @@ Atualizado em 2026-10-03. Migrations em `supabase/migrations/`, todas registrada
 | `resolver_tenant(host)` | **anon** + authenticated | Branding da empresa pelo host (só nome, logo, cores, subdomínio) |
 | `listar_minhas_empresas()` | authenticated | Vínculos do usuário logado (inclui pendentes) com nome, logo, subdomínio e status |
 | `solicitar_acesso_empresa(cnpj)` | authenticated | Cria vínculo pendente (`tecnico`) com a empresa do CNPJ |
+| `solicitar_acesso_empresa_por_id(id_empresa)` | authenticated | Mesma regra, pelo id (tela /sem-acesso do subdomínio, sem expor CNPJ) |
 | `listar_usuarios_empresa(id_empresa)` | authenticated (só admin) | Lista vínculos com nome, e-mail, foto, matrícula, papel e status |
 | `aprovar_usuario(id_empresa, id_usuario, tipo_acesso, matricula)` | authenticated (só admin) | Aprova **somente pendentes**, define papel e matrícula |
 | `alterar_papel_usuario(id_empresa, id_usuario, tipo_acesso)` | authenticated (só admin) | Troca papel de usuário aprovado; bloqueia remover o último admin |
@@ -259,6 +261,9 @@ Atualizado em 2026-10-03. Migrations em `supabase/migrations/`, todas registrada
 
 - `anon` executa somente `resolver_tenant`. Funções novas em `public` não recebem EXECUTE automático para `anon`/PUBLIC (default privileges); conceder explicitamente quando necessário (ex.: `resolver_tenant`).
 - Retorno padrão das RPCs de escrita: `json` `{ success, message, ... }`.
+
+### Storage
+- Bucket `logos`: público para leitura; limite 1 MB; png, jpg, svg, webp. Policies em `storage.objects` (insert/update/delete/select) só para `usuario_admin_empresa` do id na primeira pasta do caminho.
 
 ### Triggers
 - `on_auth_user_created` (insert em `auth.users`) → `handle_new_user()`.
@@ -422,7 +427,7 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 ### Fase 2 — Frontend base (Nuxt)
 - [x] Spec do Frontend base (`docs/superpowers/specs/2026-10-03-frontend-base-design.md`)
 - [x] Plano de implementação do Frontend base (`docs/superpowers/plans/2026-10-03-frontend-base.md`, 15 tasks) — execução na branch `feat/frontend-base`
-- [ ] Migration `storage_logos` (bucket `logos` + RPC `solicitar_acesso_empresa_por_id`)
+- [x] Migration `storage_logos` (bucket `logos` + RPC `solicitar_acesso_empresa_por_id`), versão `20261003183249`, 12/12 testes a seco
 - [ ] Infra: DNS wildcard `*.manutgo.otimetech.com.br` + certificado wildcard no Coolify; Redirect URLs do Auth (`https://manutgo.otimetech.com.br/**`, `https://*.manutgo.otimetech.com.br/**`)
 - [x] Criar projeto Nuxt (SSR) + Tailwind CSS (`@nuxtjs/tailwindcss`) em `web/`
 - [x] Integração Supabase (`@nuxtjs/supabase`)
@@ -501,3 +506,4 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 | 2026-10-03 | Frontend base, task 4: validação de CNPJ (numérico/alfanumérico) e subdomínio no cliente, espelhando o banco (`web/shared/utils/cnpj.ts`, `subdominio.ts`). |
 | 2026-10-03 | Frontend base, task 5: helper `rpc()` + `ErroApp` (mensagens do banco, erro de rede genérico) em `web/shared/utils/rpc.ts`. |
 | 2026-10-03 | Frontend base, task 6: tenant resolvido no SSR (`server/middleware/tenant.ts`, cache 60 s), tema por empresa no `<html>`, página de erro "Empresa não encontrada". Sessão compartilhada entre raiz e subdomínios validada com `lvh.me`; domínio do cookie em runtime (`NUXT_PUBLIC_SUPABASE_COOKIE_OPTIONS_DOMAIN`). **Dados de teste no banco:** empresa `demo-ui` (id 3) e usuários `teste.admin@manutgo.test` / `teste.tecnico@manutgo.test` — remover ao final. |
+| 2026-10-03 | Frontend base, task 7: migration `storage_logos` (versão `20261003183249`) testada a seco (12/12) e aplicada: bucket `logos` e RPC `solicitar_acesso_empresa_por_id`. |
