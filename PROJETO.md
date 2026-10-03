@@ -435,8 +435,8 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 - [ ] Layout desktop (menu lateral + topbar)
 - [ ] Layout mobile (bottom navigation)
 - [x] Telas de auth: cadastro, login, recuperar senha
-- [ ] Onboarding: criar empresa / solicitar acesso por CNPJ / aguardando aprovação
-- [ ] Seleção de empresa (usuário com vários vínculos)
+- [x] Onboarding: criar empresa / solicitar acesso por CNPJ / aguardando aprovação
+- [x] Seleção de empresa (usuário com vários vínculos)
 - [ ] Tela de gestão de usuários (aprovar, rejeitar, alterar papel, desativar)
 - [ ] Configurações da empresa (dados, logo, cores)
 
@@ -510,3 +510,4 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 | 2026-10-03 | Frontend base, task 8: componentes base em `web/app/components/` (cards, badges, abas, botões, campos, toast, diálogo, avatar, logo, card de autenticação), registrados no `design.md` seção 6.17; conferidos em screenshot com tema padrão e da `demo-ui`. |
 | 2026-10-03 | Frontend base, task 9: regras de acesso (`decidirAcesso`, `destinoAposLogin`, `redirectSeguro`, 17 testes), cache de vínculos (`useMinhasEmpresas`) e middleware global de rotas. |
 | 2026-10-03 | Frontend base, task 10: telas de login, cadastro, recuperar e redefinir senha (marca da empresa no subdomínio); verificadas no navegador (senha errada, destino após login, tema). |
+| 2026-10-03 | Frontend base, task 11: telas da raiz: minhas empresas, criar empresa (subdomínio com checagem ao digitar, máscara de CNPJ) e solicitar acesso; verificadas no navegador. Novos dados de teste: empresa `teste-admin` e usuário `teste.vazio@manutgo.test`. |

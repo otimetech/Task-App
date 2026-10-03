@@ -349,7 +349,7 @@ O modelo cobre apenas desktop. Regras de adaptação (pendente de modelo visual 
 | Detalhe do equipamento (desktop) | ✅ Modelo aprovado | `design_modelo.png` |
 | Detalhe do equipamento (mobile) | ⬜ Pendente | Adaptação da seção 10 |
 | Login / cadastro / recuperar senha | ✅ Derivado dos tokens (2026-10-03) | `AuthCard` central sobre `bg-app`; marca da empresa no subdomínio |
-| Onboarding (criar/entrar em empresa) | ⬜ Pendente | |
+| Onboarding (minhas empresas, criar, entrar em empresa) | ✅ Derivado dos tokens (2026-10-03) | Lista em `AppCard` com `StatusBadge`; formulários em `AuthCard`; prévia do subdomínio |
 | Dashboard | ⬜ Pendente | |
 | Lista de O.S. | ⬜ Pendente | |
 | Detalhe/execução da O.S. | ⬜ Pendente | |
