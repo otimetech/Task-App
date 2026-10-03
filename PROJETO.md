@@ -497,3 +497,4 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 | 2026-10-03 | Nome da plataforma confirmado: ManutGO. |
 | 2026-10-03 | Frontend base, task 1: projeto Nuxt 4 criado em `web/` (Tailwind com tokens do `design.md`, `@nuxtjs/supabase`, Vitest, fonte Inter, tipos do banco em `web/shared/types/database.ts`). |
 | 2026-10-03 | Frontend base, task 2: `analisarHost`, `montarUrlEmpresa`, `montarUrlRaiz` em `web/shared/utils/host.ts` (10 testes). |
+| 2026-10-03 | Frontend base, task 3: `gerarVariaveisTema` e `estiloTema` em `web/shared/utils/tema.ts` (6 testes). |
