@@ -3,7 +3,7 @@
 > **Arquivo central de design do projeto.** Todo padrão visual, token, componente e tela aprovada é registrado aqui.
 > **Regra:** a interface segue **exatamente** o modelo de referência abaixo. Qualquer nova tela reutiliza estes tokens e componentes. Mudanças de design são registradas neste arquivo e no histórico do `PROJETO.md`.
 
-- **Última atualização:** 2026-09-29
+- **Última atualização:** 2026-10-03
 - **Referência visual oficial:** [`design_modelo.png`](design_modelo.png) (870 × 640 px, tela desktop "Detalhe do equipamento")
 
 ![Modelo de referência](design_modelo.png)
@@ -233,6 +233,23 @@ Card largura total, altura ~140 px, dividido em 3 zonas por divisores verticais 
 ### 6.16 `MetricRow` (Current State)
 Linha de destaque: `StatusDot` 14 px + "Connected" `body` `success-700` + "Last seen today, 09:14" `caption` `text-secondary`. Depois, `KeyValueRow` com valor em `body-strong`.
 
+### 6.17 Componentes de aplicação (derivados dos tokens, 2026-10-03)
+
+Implementados em `web/app/components/` para telas sem modelo visual (login, onboarding, gestão).
+
+| Componente | Regra visual |
+|---|---|
+| `AppButton` | Altura 40 px, raio 4 px, 14 px 500. `primario`: fundo `brand-700`, texto branco, hover `brand-900`. `secundario`: fundo `surface`, borda `border`. `perigo`: fundo `danger-700`. `link`: texto `brand-600` (como "Edit" do modelo). Carregando: spinner 16 px + opacidade 60 %. |
+| `FormField` + `TextInput` / `SelectInput` | Rótulo `label` (13 px `text-muted`) acima; campo 40 px, borda `border`, raio 4 px, foco borda `brand-600`; erro 12 px `danger-700` abaixo. |
+| `StatusBadge` | Variantes do 6.3 + `warning` (fundo `warning-50`, borda `warning-200`, texto `warning-600`) e `neutro` (fundo `sidebar-active`, texto `text-secondary`). |
+| `AppTabs` | Igual ao 6.14, com contador opcional (badge `brand-100`/`brand-700`). |
+| `AppToast` | Canto superior direito, raio 4 px; sucesso `success-100`/`success-700`, erro `danger-100`/`danger-700`; some em 5 s. |
+| `ConfirmDialog` | Card central max 448 px sobre overlay preto 30 %; botões Cancelar (secundário) + Confirmar (primário ou perigo). |
+| `EmptyState` | Título `title`, mensagem `body` `text-secondary`, ações centralizadas. |
+| `AppAvatar` | Igual ao rodapé da sidebar (5.1): círculo `avatar-bg`, iniciais 12 px 600. |
+| `BrandLogo` | Logo da empresa (bucket `logos`) ou hexágono contornado `brand-900`. |
+| `AuthCard` | Card 400 px centralizado sobre `bg-app`, padding 24 px; logo 28 px + nome da empresa (ou ManutGO) no topo; título 20 px 600. |
+
 ---
 
 ## 7. Tela de referência: Detalhe do equipamento
@@ -322,6 +339,7 @@ O modelo cobre apenas desktop. Regras de adaptação (pendente de modelo visual 
 - Grid de 3 colunas vira **1 coluna**; ordem: cabeçalho → alerta → O.S. ativa → estado atual → demais cards.
 - Abas com rolagem horizontal.
 - Mesmos tokens, componentes e cores.
+- **Implementado (2026-10-03):** abaixo de 1024 px a sidebar some e aparece a bottom navigation fixa (56 px, fundo `surface`, borda superior `border`, ícone 18 px + rótulo 11 px; ativo em `brand-700` 600). "Mais" abre uma folha inferior com usuário, demais itens do menu, Minhas empresas e Sair.
 
 ---
 
@@ -331,16 +349,19 @@ O modelo cobre apenas desktop. Regras de adaptação (pendente de modelo visual 
 |---|---|---|
 | Detalhe do equipamento (desktop) | ✅ Modelo aprovado | `design_modelo.png` |
 | Detalhe do equipamento (mobile) | ⬜ Pendente | Adaptação da seção 10 |
-| Login / cadastro | ⬜ Pendente | |
-| Onboarding (criar/entrar em empresa) | ⬜ Pendente | |
+| Login / cadastro / recuperar senha | ✅ Derivado dos tokens (2026-10-03) | `AuthCard` central sobre `bg-app`; marca da empresa no subdomínio |
+| Onboarding (minhas empresas, criar, entrar em empresa) | ✅ Derivado dos tokens (2026-10-03) | Lista em `AppCard` com `StatusBadge`; formulários em `AuthCard`; prévia do subdomínio |
+| Início (provisório) | ✅ Derivado dos tokens (2026-10-03) | Card de boas-vindas (`display` 28 px) + cards "em breve" dos módulos; substituído pelo Dashboard na Fase 6 |
+| Sem acesso | ✅ Derivado dos tokens (2026-10-03) | `AuthCard` com mensagem por situação do vínculo |
+| Layout do app (sidebar, topbar, bottom nav) | ✅ Implementado (2026-10-03) | Sidebar 196 px conforme 5.1; módulos futuros esmaecidos (`text-subtle`), sem link; Usuários/Configurações só admin |
 | Dashboard | ⬜ Pendente | |
 | Lista de O.S. | ⬜ Pendente | |
 | Detalhe/execução da O.S. | ⬜ Pendente | |
 | Agenda | ⬜ Pendente | |
 | Clientes / unidades | ⬜ Pendente | |
 | Checklists | ⬜ Pendente | |
-| Gestão de usuários | ⬜ Pendente | |
-| Configurações da empresa | ⬜ Pendente | |
+| Gestão de usuários | ✅ Derivado dos tokens (2026-10-03) | `AppTabs` Ativos/Pendentes/Desativados + lista em `AppCard` (avatar, nome, e-mail, matrícula, badge de papel); ações em `ConfirmDialog` |
+| Configurações da empresa | ✅ Derivado dos tokens (2026-10-03) | `AppTabs` Dados/Identidade visual/Domínio; prévia ao vivo das cores (botão, badge, link) em caixa `brand-50` |
 
 ---
 
@@ -351,3 +372,4 @@ O modelo cobre apenas desktop. Regras de adaptação (pendente de modelo visual 
 | 2026-09-29 | Criação do `design.md` a partir de `design_modelo.png`: tokens de cor (amostrados da imagem), tipografia, layout, 16 componentes, mapeamento da tela de equipamento e do menu. Paleta azul `#2563EB` do escopo original substituída pelo azul petróleo do modelo. |
 | 2026-09-29 | Confirmados pelo responsável: fonte Inter, paleta azul petróleo do modelo, mapeamento do menu lateral e textos da interface em pt-BR. |
 | 2026-09-29 | Configuração passa a ser só Tailwind CSS (`@nuxtjs/tailwindcss`); Twind removido. |
+| 2026-10-03 | Componentes de aplicação derivados dos tokens (seção 6.17): botões, campos, toast, diálogo, estado vazio, avatar, logo, card de autenticação. Tema por empresa: `cor_primaria` gera a família `brand-*` via `color-mix`. |

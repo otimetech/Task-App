@@ -53,6 +53,7 @@ Experiência responsiva, com foco distinto por dispositivo:
 | Hospedagem frontend | VPS própria com Coolify |
 | Renderização | SSR (Nuxt server resolve o tenant pelo host) |
 | Domínio base | `manutgo.otimetech.com.br` (empresas em `<subdominio>.manutgo.otimetech.com.br`) |
+| Código do frontend | `web/` (Nuxt 4). Como rodar, variáveis e estrutura: [`web/README.md`](web/README.md) |
 
 > Flutter foi descartado (2026-09-29). O resumo do backend no `.docx` ainda cita Flutter; vale o Nuxt.
 
@@ -216,6 +217,7 @@ Atualizado em 2026-10-03. Migrations em `supabase/migrations/`, todas registrada
 |---|---|---|
 | `20260929000000` | `baseline` | Schema original criado pelo SQL Editor (reconstruído do catálogo) |
 | `20260930022111` | `correcoes_fundacao` | Correções P1–P7, P9–P11, P13, P14 + matrícula |
+| `20261003183249` | `storage_logos` | Bucket público `logos` (escrita só admin, caminho `{id_empresa}/logo.<ext>`) + RPC `solicitar_acesso_empresa_por_id` |
 | `20261003180455` | `branding_dominios` | Branding/assinatura em `empresas`, `empresa_dominios`, subdomínio em `criar_empresa`, `resolver_tenant`, `listar_minhas_empresas` |
 
 ### Tabelas (`public`)
@@ -243,6 +245,7 @@ Atualizado em 2026-10-03. Migrations em `supabase/migrations/`, todas registrada
 | `resolver_tenant(host)` | **anon** + authenticated | Branding da empresa pelo host (só nome, logo, cores, subdomínio) |
 | `listar_minhas_empresas()` | authenticated | Vínculos do usuário logado (inclui pendentes) com nome, logo, subdomínio e status |
 | `solicitar_acesso_empresa(cnpj)` | authenticated | Cria vínculo pendente (`tecnico`) com a empresa do CNPJ |
+| `solicitar_acesso_empresa_por_id(id_empresa)` | authenticated | Mesma regra, pelo id (tela /sem-acesso do subdomínio, sem expor CNPJ) |
 | `listar_usuarios_empresa(id_empresa)` | authenticated (só admin) | Lista vínculos com nome, e-mail, foto, matrícula, papel e status |
 | `aprovar_usuario(id_empresa, id_usuario, tipo_acesso, matricula)` | authenticated (só admin) | Aprova **somente pendentes**, define papel e matrícula |
 | `alterar_papel_usuario(id_empresa, id_usuario, tipo_acesso)` | authenticated (só admin) | Troca papel de usuário aprovado; bloqueia remover o último admin |
@@ -259,6 +262,9 @@ Atualizado em 2026-10-03. Migrations em `supabase/migrations/`, todas registrada
 
 - `anon` executa somente `resolver_tenant`. Funções novas em `public` não recebem EXECUTE automático para `anon`/PUBLIC (default privileges); conceder explicitamente quando necessário (ex.: `resolver_tenant`).
 - Retorno padrão das RPCs de escrita: `json` `{ success, message, ... }`.
+
+### Storage
+- Bucket `logos`: público para leitura; limite 1 MB; png, jpg, svg, webp. Policies em `storage.objects` (insert/update/delete/select) só para `usuario_admin_empresa` do id na primeira pasta do caminho.
 
 ### Triggers
 - `on_auth_user_created` (insert em `auth.users`) → `handle_new_user()`.
@@ -384,6 +390,17 @@ checklist_itens
 - [ ] **Efeito de `status_assinatura`** (suspensa/cancelada) no acesso dos usuários — definir até a Fase 7.
 - [ ] **Geração do PDF:** no navegador, Edge Function ou serviço dedicado.
 
+### Melhorias menores do Frontend base (revisão de 2026-10-03)
+
+- [ ] Cache de tenant: guardar "empresa não encontrada" por menos tempo (~5 s); hoje, após trocar o subdomínio, o novo endereço pode mostrar "Empresa não encontrada" por até 60 s se alguém o acessou antes.
+- [ ] Revalidar vínculo ao navegar para rotas de admin (admin rebaixado por outro admin continua vendo o menu até recarregar; o banco já bloqueia as ações).
+- [ ] Logos SVG no bucket público: avaliar bloquear SVG ou sanitizar no upload.
+- [ ] `usuario_admin_empresa` não confere `empresas.ativo`: admin de empresa desativada ainda altera a logo.
+- [ ] Login na raiz com uma só empresa ignora o `redirect` pedido (vai direto ao subdomínio).
+- [ ] Sessão expirada no meio da navegação mostra erro do banco em vez de levar ao login.
+- [ ] Documentar que o app precisa de proxy (Traefik/Coolify) sobrescrevendo `X-Forwarded-Host`.
+- [ ] Host IPv6 (`[::1]:3000`) não é interpretado (só dev).
+
 ---
 
 ## 11. Checklist
@@ -421,19 +438,21 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 
 ### Fase 2 — Frontend base (Nuxt)
 - [x] Spec do Frontend base (`docs/superpowers/specs/2026-10-03-frontend-base-design.md`)
-- [~] Plano de implementação do Frontend base (`docs/superpowers/plans/2026-10-03-frontend-base.md`, 15 tasks) — aguardando revisão
-- [ ] Migration `storage_logos` (bucket `logos` + RPC `solicitar_acesso_empresa_por_id`)
+- [x] Plano de implementação do Frontend base (`docs/superpowers/plans/2026-10-03-frontend-base.md`, 15 tasks) — execução na branch `feat/frontend-base`
+- [x] Migration `storage_logos` (bucket `logos` + RPC `solicitar_acesso_empresa_por_id`), versão `20261003183249`, 12/12 testes a seco
 - [ ] Infra: DNS wildcard `*.manutgo.otimetech.com.br` + certificado wildcard no Coolify; Redirect URLs do Auth (`https://manutgo.otimetech.com.br/**`, `https://*.manutgo.otimetech.com.br/**`)
-- [ ] Criar projeto Nuxt (SSR) + Tailwind CSS (`@nuxtjs/tailwindcss`)
-- [ ] Integração Supabase (`@nuxtjs/supabase`)
-- [ ] Resolução de tenant pelo host + tema dinâmico
-- [ ] Layout desktop (menu lateral + topbar)
-- [ ] Layout mobile (bottom navigation)
-- [ ] Telas de auth: cadastro, login, recuperar senha
-- [ ] Onboarding: criar empresa / solicitar acesso por CNPJ / aguardando aprovação
-- [ ] Seleção de empresa (usuário com vários vínculos)
-- [ ] Tela de gestão de usuários (aprovar, rejeitar, alterar papel, desativar)
-- [ ] Configurações da empresa (dados, logo, cores)
+- [x] Criar projeto Nuxt (SSR) + Tailwind CSS (`@nuxtjs/tailwindcss`) em `web/`
+- [x] Integração Supabase (`@nuxtjs/supabase`)
+- [x] Resolução de tenant pelo host + tema dinâmico
+- [x] Layout desktop (menu lateral + topbar)
+- [x] Layout mobile (bottom navigation)
+- [x] Telas de auth: cadastro, login, recuperar senha
+- [x] Onboarding: criar empresa / solicitar acesso por CNPJ / aguardando aprovação
+- [x] Seleção de empresa (usuário com vários vínculos)
+- [x] Tela de gestão de usuários (aprovar, rejeitar, alterar papel, desativar)
+- [x] Configurações da empresa (dados, logo, cores, subdomínio)
+- [x] Dados de teste removidos do banco (empresas `demo-ui` e `teste-admin2`, usuários `teste.*@manutgo.test`, logo de teste)
+- [x] Revisão final da branch `feat/frontend-base` (sem críticos; 1 importante corrigido) e merge em `main`
 
 ### Fase 3 — Cadastros
 - [ ] Clientes
@@ -495,3 +514,19 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 | 2026-10-03 | Brainstorming do Frontend base: decididos login na raiz e no subdomínio com sessão compartilhada, tela de aviso para subdomínio sem vínculo, telas derivadas dos tokens, Nuxt 4 em `web/` com `@nuxtjs/supabase`. Spec escrita em `docs/superpowers/specs/2026-10-03-frontend-base-design.md` (inclui migration futura `storage_logos` e RPC `solicitar_acesso_empresa_por_id`). |
 | 2026-10-03 | Spec do Frontend base aprovada. Plano de implementação escrito em `docs/superpowers/plans/2026-10-03-frontend-base.md` (15 tasks). Nome exibido da plataforma configurável (`NUXT_PUBLIC_APP_NAME`, padrão `ManutGO`) — pendente de confirmação. |
 | 2026-10-03 | Nome da plataforma confirmado: ManutGO. |
+| 2026-10-03 | Frontend base, task 1: projeto Nuxt 4 criado em `web/` (Tailwind com tokens do `design.md`, `@nuxtjs/supabase`, Vitest, fonte Inter, tipos do banco em `web/shared/types/database.ts`). |
+| 2026-10-03 | Frontend base, task 2: `analisarHost`, `montarUrlEmpresa`, `montarUrlRaiz` em `web/shared/utils/host.ts` (10 testes). |
+| 2026-10-03 | Frontend base, task 3: `gerarVariaveisTema` e `estiloTema` em `web/shared/utils/tema.ts` (6 testes). |
+| 2026-10-03 | Frontend base, task 4: validação de CNPJ (numérico/alfanumérico) e subdomínio no cliente, espelhando o banco (`web/shared/utils/cnpj.ts`, `subdominio.ts`). |
+| 2026-10-03 | Frontend base, task 5: helper `rpc()` + `ErroApp` (mensagens do banco, erro de rede genérico) em `web/shared/utils/rpc.ts`. |
+| 2026-10-03 | Frontend base, task 6: tenant resolvido no SSR (`server/middleware/tenant.ts`, cache 60 s), tema por empresa no `<html>`, página de erro "Empresa não encontrada". Sessão compartilhada entre raiz e subdomínios validada com `lvh.me`; domínio do cookie em runtime (`NUXT_PUBLIC_SUPABASE_COOKIE_OPTIONS_DOMAIN`). **Dados de teste no banco:** empresa `demo-ui` (id 3) e usuários `teste.admin@manutgo.test` / `teste.tecnico@manutgo.test` — remover ao final. |
+| 2026-10-03 | Frontend base, task 7: migration `storage_logos` (versão `20261003183249`) testada a seco (12/12) e aplicada: bucket `logos` e RPC `solicitar_acesso_empresa_por_id`. |
+| 2026-10-03 | Frontend base, task 8: componentes base em `web/app/components/` (cards, badges, abas, botões, campos, toast, diálogo, avatar, logo, card de autenticação), registrados no `design.md` seção 6.17; conferidos em screenshot com tema padrão e da `demo-ui`. |
+| 2026-10-03 | Frontend base, task 9: regras de acesso (`decidirAcesso`, `destinoAposLogin`, `redirectSeguro`, 17 testes), cache de vínculos (`useMinhasEmpresas`) e middleware global de rotas. |
+| 2026-10-03 | Frontend base, task 10: telas de login, cadastro, recuperar e redefinir senha (marca da empresa no subdomínio); verificadas no navegador (senha errada, destino após login, tema). |
+| 2026-10-03 | Frontend base, task 11: telas da raiz: minhas empresas, criar empresa (subdomínio com checagem ao digitar, máscara de CNPJ) e solicitar acesso; verificadas no navegador. Novos dados de teste: empresa `teste-admin` e usuário `teste.vazio@manutgo.test`. |
+| 2026-10-03 | Frontend base, task 12: layout do app (sidebar, topbar, bottom navigation mobile), Início provisório e tela `/sem-acesso` com solicitação de acesso; verificados no navegador (admin, pendente, sem vínculo, mobile 390 px). |
+| 2026-10-03 | Frontend base, task 13: tela `/usuarios` (admin): aprovar com papel e matrícula, rejeitar, alterar papel, desativar, reativar; mensagens de regra do banco; verificada no navegador (matrícula repetida, último admin, técnico desativado/reativado). |
+| 2026-10-03 | Frontend base, task 14: tela `/configuracoes` (admin): dados cadastrais, logo (bucket `logos`, até 1 MB), cores com prévia ao vivo e alteração de subdomínio; verificada no navegador. Empresa de teste agora em `teste-admin2`. |
+| 2026-10-03 | Frontend base, task 15: fechamento: `web/README.md` (como rodar, variáveis, `*.localhost`/`lvh.me`), 64 testes passando, build ok, sessão compartilhada raiz ↔ subdomínio verificada no navegador com `lvh.me` (login, entrar, sair). Remoção dos dados de teste aguarda confirmação. |
+| 2026-10-03 | Revisão final do Frontend base: nenhum problema crítico; corrigido o cache de tenant sem limite (agora 1000 hosts, expiração removida na leitura; 3 testes). Dados de teste removidos do banco com autorização do responsável. Pendências menores registradas na seção 10. Merge de `feat/frontend-base` em `main`. |
