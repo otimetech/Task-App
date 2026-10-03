@@ -53,6 +53,7 @@ Experiência responsiva, com foco distinto por dispositivo:
 | Hospedagem frontend | VPS própria com Coolify |
 | Renderização | SSR (Nuxt server resolve o tenant pelo host) |
 | Domínio base | `manutgo.otimetech.com.br` (empresas em `<subdominio>.manutgo.otimetech.com.br`) |
+| Código do frontend | `web/` (Nuxt 4). Como rodar, variáveis e estrutura: [`web/README.md`](web/README.md) |
 
 > Flutter foi descartado (2026-09-29). O resumo do backend no `.docx` ainda cita Flutter; vale o Nuxt.
 
@@ -439,6 +440,8 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 - [x] Seleção de empresa (usuário com vários vínculos)
 - [x] Tela de gestão de usuários (aprovar, rejeitar, alterar papel, desativar)
 - [x] Configurações da empresa (dados, logo, cores, subdomínio)
+- [ ] Remover dados de teste do banco (empresas `demo-ui` e `teste-admin2`, usuários `teste.*@manutgo.test`, logo de teste) — aguardando confirmação do responsável
+- [ ] Revisão final da branch `feat/frontend-base` e merge em `main`
 
 ### Fase 3 — Cadastros
 - [ ] Clientes
@@ -514,3 +517,4 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 | 2026-10-03 | Frontend base, task 12: layout do app (sidebar, topbar, bottom navigation mobile), Início provisório e tela `/sem-acesso` com solicitação de acesso; verificados no navegador (admin, pendente, sem vínculo, mobile 390 px). |
 | 2026-10-03 | Frontend base, task 13: tela `/usuarios` (admin): aprovar com papel e matrícula, rejeitar, alterar papel, desativar, reativar; mensagens de regra do banco; verificada no navegador (matrícula repetida, último admin, técnico desativado/reativado). |
 | 2026-10-03 | Frontend base, task 14: tela `/configuracoes` (admin): dados cadastrais, logo (bucket `logos`, até 1 MB), cores com prévia ao vivo e alteração de subdomínio; verificada no navegador. Empresa de teste agora em `teste-admin2`. |
+| 2026-10-03 | Frontend base, task 15: fechamento: `web/README.md` (como rodar, variáveis, `*.localhost`/`lvh.me`), 64 testes passando, build ok, sessão compartilhada raiz ↔ subdomínio verificada no navegador com `lvh.me` (login, entrar, sair). Remoção dos dados de teste aguarda confirmação. |
