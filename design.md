@@ -361,7 +361,7 @@ O modelo cobre apenas desktop. Regras de adaptação (pendente de modelo visual 
 | Clientes / unidades | ⬜ Pendente | |
 | Checklists | ⬜ Pendente | |
 | Gestão de usuários | ✅ Derivado dos tokens (2026-10-03) | `AppTabs` Ativos/Pendentes/Desativados + lista em `AppCard` (avatar, nome, e-mail, matrícula, badge de papel); ações em `ConfirmDialog` |
-| Configurações da empresa | ⬜ Pendente | |
+| Configurações da empresa | ✅ Derivado dos tokens (2026-10-03) | `AppTabs` Dados/Identidade visual/Domínio; prévia ao vivo das cores (botão, badge, link) em caixa `brand-50` |
 
 ---
 

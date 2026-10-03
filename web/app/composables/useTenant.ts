@@ -33,5 +33,11 @@ export function useTenant() {
     aplicarCores: (novas: CoresEmpresa) => {
       cores.value = { ...novas }
     },
+    /** Atualiza dados da empresa atual no estado (após salvar em Configurações). */
+    atualizarEmpresa: (parcial: Partial<EmpresaTenant>) => {
+      if (tenant.value.contexto === 'empresa') {
+        tenant.value = { contexto: 'empresa', empresa: { ...tenant.value.empresa, ...parcial } }
+      }
+    },
   }
 }
