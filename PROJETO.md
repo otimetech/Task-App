@@ -217,6 +217,7 @@ Atualizado em 2026-10-03. Migrations em `supabase/migrations/`, todas registrada
 |---|---|---|
 | `20260929000000` | `baseline` | Schema original criado pelo SQL Editor (reconstruído do catálogo) |
 | `20260930022111` | `correcoes_fundacao` | Correções P1–P7, P9–P11, P13, P14 + matrícula |
+| `20261003193146` | `pendentes_minhas_empresas` | `listar_minhas_empresas` passa a retornar `pendentes` (solicitações aguardando aprovação; só para administrador) |
 | `20261003183249` | `storage_logos` | Bucket público `logos` (escrita só admin, caminho `{id_empresa}/logo.<ext>`) + RPC `solicitar_acesso_empresa_por_id` |
 | `20261003180455` | `branding_dominios` | Branding/assinatura em `empresas`, `empresa_dominios`, subdomínio em `criar_empresa`, `resolver_tenant`, `listar_minhas_empresas` |
 
@@ -243,7 +244,7 @@ Atualizado em 2026-10-03. Migrations em `supabase/migrations/`, todas registrada
 | `verificar_subdominio(subdominio)` | authenticated | Valida formato/reservados e informa disponibilidade |
 | `alterar_subdominio(id_empresa, subdominio)` | authenticated (só admin) | Troca o subdomínio da empresa |
 | `resolver_tenant(host)` | **anon** + authenticated | Branding da empresa pelo host (só nome, logo, cores, subdomínio) |
-| `listar_minhas_empresas()` | authenticated | Vínculos do usuário logado (inclui pendentes) com nome, logo, subdomínio e status |
+| `listar_minhas_empresas()` | authenticated | Vínculos do usuário logado (inclui pendentes) com nome, logo, subdomínio, status e `pendentes` (nº de solicitações a aprovar, só para administrador) |
 | `solicitar_acesso_empresa(cnpj)` | authenticated | Cria vínculo pendente (`tecnico`) com a empresa do CNPJ |
 | `solicitar_acesso_empresa_por_id(id_empresa)` | authenticated | Mesma regra, pelo id (tela /sem-acesso do subdomínio, sem expor CNPJ) |
 | `listar_usuarios_empresa(id_empresa)` | authenticated (só admin) | Lista vínculos com nome, e-mail, foto, matrícula, papel e status |
@@ -379,6 +380,7 @@ checklist_itens
 | 2026-10-03 | Subdomínio sem vínculo ativo: tela de aviso com opções (solicitar acesso, minhas empresas, sair) | Definição do responsável |
 | 2026-10-03 | Telas sem modelo visual são derivadas dos tokens do `design.md` e registradas nele; aprovação ao ver rodando | Definição do responsável |
 | 2026-10-03 | Nome da plataforma: **ManutGO** (marca padrão na raiz e no login genérico) | Definição do responsável |
+| 2026-10-03 | Toda mudança é testada e validada no navegador com Playwright; erros encontrados são corrigidos antes da entrega. Scripts em `web/tests/e2e/` | Regra do responsável |
 | 2026-10-03 | Frontend em `web/`, Nuxt 4 SSR, `@nuxtjs/supabase`, Vitest. Spec: `docs/superpowers/specs/2026-10-03-frontend-base-design.md` | Aprovado pelo responsável |
 
 ---
@@ -452,6 +454,7 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 - [x] Tela de gestão de usuários (aprovar, rejeitar, alterar papel, desativar)
 - [x] Configurações da empresa (dados, logo, cores, subdomínio)
 - [x] Dados de teste removidos do banco (empresas `demo-ui` e `teste-admin2`, usuários `teste.*@manutgo.test`, logo de teste)
+- [x] Melhorias pós-entrega: aviso de solicitações pendentes em Minhas empresas e no menu Usuários (desktop e mobile), Usuários abre na aba Pendentes, cadastro avisa e-mail já cadastrado; validadas com Playwright (16 + 8 verificações)
 - [x] Revisão final da branch `feat/frontend-base` (sem críticos; 1 importante corrigido) e merge em `main`
 
 ### Fase 3 — Cadastros
@@ -530,3 +533,4 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 | 2026-10-03 | Frontend base, task 14: tela `/configuracoes` (admin): dados cadastrais, logo (bucket `logos`, até 1 MB), cores com prévia ao vivo e alteração de subdomínio; verificada no navegador. Empresa de teste agora em `teste-admin2`. |
 | 2026-10-03 | Frontend base, task 15: fechamento: `web/README.md` (como rodar, variáveis, `*.localhost`/`lvh.me`), 64 testes passando, build ok, sessão compartilhada raiz ↔ subdomínio verificada no navegador com `lvh.me` (login, entrar, sair). Remoção dos dados de teste aguarda confirmação. |
 | 2026-10-03 | Revisão final do Frontend base: nenhum problema crítico; corrigido o cache de tenant sem limite (agora 1000 hosts, expiração removida na leitura; 3 testes). Dados de teste removidos do banco com autorização do responsável. Pendências menores registradas na seção 10. Merge de `feat/frontend-base` em `main`. |
+| 2026-10-03 | Melhorias após uso do responsável: contador de solicitações pendentes (migration `pendentes_minhas_empresas`, versão `20261003193146`, 4/4 testes a seco) em Minhas empresas, menu Usuários e botão Mais (mobile); Usuários abre na aba Pendentes; cadastro com e-mail existente avisa e oferece recuperar senha. Bugs achados no Playwright e corrigidos: texto de ajuda/prévia dentro do `<label>` (nome acessível errado), envio nativo do formulário antes da hidratação (dados perdidos), barra de rolagem vertical nas abas. Regra nova: validar sempre com Playwright. |

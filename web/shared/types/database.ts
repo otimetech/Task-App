@@ -242,6 +242,7 @@ export type Database = {
           id_empresa: number
           logo: string
           nome: string
+          pendentes: number
           subdominio: string
           tipo_acesso: string
         }[]

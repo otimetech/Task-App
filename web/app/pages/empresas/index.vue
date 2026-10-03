@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Vinculo } from '#shared/types/app'
 import { situacaoVinculo } from '#shared/utils/acesso'
+import { textoPendentes } from '#shared/utils/cadastro'
 import { ErroApp, MENSAGEM_REDE } from '#shared/utils/rpc'
 
 definePageMeta({ layout: 'publico' })
@@ -64,6 +65,13 @@ function logoDe(v: Vinculo) {
           <div class="min-w-0 flex-1">
             <p class="truncate text-sm font-semibold text-ink">{{ v.nome }}</p>
             <p class="truncate text-xs text-ink-muted">{{ v.subdominio }}.{{ config.public.baseDomain }}</p>
+            <a
+              v-if="v.pendentes && v.subdominio"
+              :href="urlDaEmpresa(v.subdominio, '/usuarios')"
+              class="mt-0.5 inline-block text-xs font-medium text-warning-600 hover:underline"
+            >
+              {{ textoPendentes(v.pendentes) }} · Aprovar
+            </a>
           </div>
           <StatusBadge v-bind="badge[situacaoVinculo(v)]" />
           <AppButton

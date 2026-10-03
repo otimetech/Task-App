@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { mensagemErroAuth } from '#shared/utils/auth'
+import { cadastroJaExiste } from '#shared/utils/cadastro'
 import { ErroApp } from '#shared/utils/rpc'
 
 definePageMeta({ layout: 'publico' })
@@ -39,6 +40,10 @@ async function cadastrar() {
       erro.value = mensagemErroAuth(error.message)
       return
     }
+    if (cadastroJaExiste(data)) {
+      erro.value = 'Já existe uma conta com este e-mail. Entre ou recupere a senha.'
+      return
+    }
     if (!data.session) {
       enviadoPara.value = email.value.trim()
       return
@@ -71,7 +76,10 @@ async function cadastrar() {
       <FormField rotulo="Confirmar senha">
         <TextInput v-model="confirmacao" type="password" autocomplete="new-password" required />
       </FormField>
-      <p v-if="erro" role="alert" class="text-sm text-danger-700">{{ erro }}</p>
+      <p v-if="erro" role="alert" class="text-sm text-danger-700">
+        {{ erro }}
+        <NuxtLink v-if="erro.startsWith('Já existe')" to="/recuperar-senha" class="ml-1 text-brand-600 hover:underline">Recuperar senha</NuxtLink>
+      </p>
       <AppButton type="submit" class="w-full" :carregando="carregando">Criar conta</AppButton>
     </form>
     <p class="mt-4 text-[13px] text-ink-secondary">

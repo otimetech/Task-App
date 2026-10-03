@@ -3,7 +3,7 @@ import { ChevronDown } from 'lucide-vue-next'
 import { itensMenu } from '#shared/utils/menu'
 
 const route = useRoute()
-const { empresa, ehAdmin, papel, nomeUsuario } = useEmpresaAtual()
+const { empresa, ehAdmin, papel, nomeUsuario, pendentes } = useEmpresaAtual()
 const { urlDaRaiz } = useTenant()
 const sair = useSair()
 const menuAberto = ref(false)
@@ -27,7 +27,12 @@ const itens = computed(() => itensMenu(ehAdmin.value))
           :class="route.path === item.rota ? 'bg-sidebar-active font-semibold text-ink' : 'text-ink-secondary hover:bg-sidebar-active'"
         >
           <MenuIcone :nome="item.icone" />
-          {{ item.rotulo }}
+          <span class="flex-1">{{ item.rotulo }}</span>
+          <span
+            v-if="item.id === 'usuarios' && pendentes"
+            class="rounded-badge bg-warning-500 px-1.5 text-[11px] font-semibold text-white"
+            :title="`${pendentes} solicitação(ões) pendente(s)`"
+          >{{ pendentes }}</span>
         </NuxtLink>
         <span
           v-else

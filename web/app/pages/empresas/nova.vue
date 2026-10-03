@@ -100,10 +100,12 @@ async function criar() {
       </FormField>
       <FormField rotulo="Subdomínio" :erro="statusSub && !statusSub.ok ? statusSub.mensagem : null">
         <TextInput v-model="form.subdominio" required placeholder="minha-empresa" />
+        <template #extra>
         <span class="mt-1 block text-xs text-ink-muted">
           {{ form.subdominio || 'minha-empresa' }}.{{ config.public.baseDomain }}
           <span v-if="statusSub?.ok" class="ml-1 font-medium text-success-700">· Disponível</span>
         </span>
+        </template>
       </FormField>
       <div class="flex gap-2">
         <AppButton variante="secundario" @click="navigateTo('/empresas')">Voltar</AppButton>

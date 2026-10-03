@@ -19,6 +19,7 @@ export function useEmpresaAtual() {
     empresa,
     vinculo,
     ehAdmin: computed(() => vinculo.value?.tipo_acesso === 'administrador'),
+    pendentes: computed(() => vinculo.value?.pendentes ?? 0),
     papel: computed(() => (vinculo.value ? ROTULO_PAPEL[vinculo.value.tipo_acesso] : '')),
     nomeUsuario,
   }

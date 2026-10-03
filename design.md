@@ -240,9 +240,10 @@ Implementados em `web/app/components/` para telas sem modelo visual (login, onbo
 | Componente | Regra visual |
 |---|---|
 | `AppButton` | Altura 40 px, raio 4 px, 14 px 500. `primario`: fundo `brand-700`, texto branco, hover `brand-900`. `secundario`: fundo `surface`, borda `border`. `perigo`: fundo `danger-700`. `link`: texto `brand-600` (como "Edit" do modelo). Carregando: spinner 16 px + opacidade 60 %. |
-| `FormField` + `TextInput` / `SelectInput` | Rótulo `label` (13 px `text-muted`) acima; campo 40 px, borda `border`, raio 4 px, foco borda `brand-600`; erro 12 px `danger-700` abaixo. |
+| `FormField` + `TextInput` / `SelectInput` | Rótulo `label` (13 px `text-muted`) acima; campo 40 px, borda `border`, raio 4 px, foco borda `brand-600`; erro 12 px `danger-700` abaixo. Ajuda, erro e textos extras (slot `extra`) ficam fora do `<label>` para não alterar o nome acessível do campo. |
 | `StatusBadge` | Variantes do 6.3 + `warning` (fundo `warning-50`, borda `warning-200`, texto `warning-600`) e `neutro` (fundo `sidebar-active`, texto `text-secondary`). |
-| `AppTabs` | Igual ao 6.14, com contador opcional (badge `brand-100`/`brand-700`). |
+| `AppTabs` | Igual ao 6.14, com contador opcional (badge `brand-100`/`brand-700`). Sem barra de rolagem visível. |
+| Contador de pendências | Badge `warning-500` com número branco 11 px 600 ao lado de **Usuários** (sidebar e folha "Mais"); ponto `warning-500` de 8 px no ícone "Mais" da bottom nav; em Minhas empresas, link 12 px 500 `warning-600` "N solicitações pendentes · Aprovar". |
 | `AppToast` | Canto superior direito, raio 4 px; sucesso `success-100`/`success-700`, erro `danger-100`/`danger-700`; some em 5 s. |
 | `ConfirmDialog` | Card central max 448 px sobre overlay preto 30 %; botões Cancelar (secundário) + Confirmar (primário ou perigo). |
 | `EmptyState` | Título `title`, mensagem `body` `text-secondary`, ações centralizadas. |
@@ -373,3 +374,4 @@ O modelo cobre apenas desktop. Regras de adaptação (pendente de modelo visual 
 | 2026-09-29 | Confirmados pelo responsável: fonte Inter, paleta azul petróleo do modelo, mapeamento do menu lateral e textos da interface em pt-BR. |
 | 2026-09-29 | Configuração passa a ser só Tailwind CSS (`@nuxtjs/tailwindcss`); Twind removido. |
 | 2026-10-03 | Componentes de aplicação derivados dos tokens (seção 6.17): botões, campos, toast, diálogo, estado vazio, avatar, logo, card de autenticação. Tema por empresa: `cor_primaria` gera a família `brand-*` via `color-mix`. |
+| 2026-10-03 | Contador de solicitações pendentes (sidebar, bottom nav, Minhas empresas); `FormField` com ajuda/erro fora do `<label>`; abas sem barra de rolagem. |
