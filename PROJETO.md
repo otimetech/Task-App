@@ -432,8 +432,8 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 - [x] Criar projeto Nuxt (SSR) + Tailwind CSS (`@nuxtjs/tailwindcss`) em `web/`
 - [x] Integração Supabase (`@nuxtjs/supabase`)
 - [ ] Resolução de tenant pelo host + tema dinâmico
-- [ ] Layout desktop (menu lateral + topbar)
-- [ ] Layout mobile (bottom navigation)
+- [x] Layout desktop (menu lateral + topbar)
+- [x] Layout mobile (bottom navigation)
 - [x] Telas de auth: cadastro, login, recuperar senha
 - [x] Onboarding: criar empresa / solicitar acesso por CNPJ / aguardando aprovação
 - [x] Seleção de empresa (usuário com vários vínculos)
@@ -511,3 +511,4 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 | 2026-10-03 | Frontend base, task 9: regras de acesso (`decidirAcesso`, `destinoAposLogin`, `redirectSeguro`, 17 testes), cache de vínculos (`useMinhasEmpresas`) e middleware global de rotas. |
 | 2026-10-03 | Frontend base, task 10: telas de login, cadastro, recuperar e redefinir senha (marca da empresa no subdomínio); verificadas no navegador (senha errada, destino após login, tema). |
 | 2026-10-03 | Frontend base, task 11: telas da raiz: minhas empresas, criar empresa (subdomínio com checagem ao digitar, máscara de CNPJ) e solicitar acesso; verificadas no navegador. Novos dados de teste: empresa `teste-admin` e usuário `teste.vazio@manutgo.test`. |
+| 2026-10-03 | Frontend base, task 12: layout do app (sidebar, topbar, bottom navigation mobile), Início provisório e tela `/sem-acesso` com solicitação de acesso; verificados no navegador (admin, pendente, sem vínculo, mobile 390 px). |

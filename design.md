@@ -339,6 +339,7 @@ O modelo cobre apenas desktop. Regras de adaptação (pendente de modelo visual 
 - Grid de 3 colunas vira **1 coluna**; ordem: cabeçalho → alerta → O.S. ativa → estado atual → demais cards.
 - Abas com rolagem horizontal.
 - Mesmos tokens, componentes e cores.
+- **Implementado (2026-10-03):** abaixo de 1024 px a sidebar some e aparece a bottom navigation fixa (56 px, fundo `surface`, borda superior `border`, ícone 18 px + rótulo 11 px; ativo em `brand-700` 600). "Mais" abre uma folha inferior com usuário, demais itens do menu, Minhas empresas e Sair.
 
 ---
 
@@ -350,6 +351,9 @@ O modelo cobre apenas desktop. Regras de adaptação (pendente de modelo visual 
 | Detalhe do equipamento (mobile) | ⬜ Pendente | Adaptação da seção 10 |
 | Login / cadastro / recuperar senha | ✅ Derivado dos tokens (2026-10-03) | `AuthCard` central sobre `bg-app`; marca da empresa no subdomínio |
 | Onboarding (minhas empresas, criar, entrar em empresa) | ✅ Derivado dos tokens (2026-10-03) | Lista em `AppCard` com `StatusBadge`; formulários em `AuthCard`; prévia do subdomínio |
+| Início (provisório) | ✅ Derivado dos tokens (2026-10-03) | Card de boas-vindas (`display` 28 px) + cards "em breve" dos módulos; substituído pelo Dashboard na Fase 6 |
+| Sem acesso | ✅ Derivado dos tokens (2026-10-03) | `AuthCard` com mensagem por situação do vínculo |
+| Layout do app (sidebar, topbar, bottom nav) | ✅ Implementado (2026-10-03) | Sidebar 196 px conforme 5.1; módulos futuros esmaecidos (`text-subtle`), sem link; Usuários/Configurações só admin |
 | Dashboard | ⬜ Pendente | |
 | Lista de O.S. | ⬜ Pendente | |
 | Detalhe/execução da O.S. | ⬜ Pendente | |
