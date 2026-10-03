@@ -23,3 +23,17 @@ export type Vinculo = {
   ativo: boolean
   empresa_ativa: boolean
 }
+
+/** Linha de public.listar_usuarios_empresa() */
+export type UsuarioEmpresa = {
+  id_usuario: string
+  nome: string
+  email: string
+  foto: string | null
+  matricula: string | null
+  tipo_acesso: 'administrador' | 'supervisor' | 'tecnico'
+  aprovado: boolean
+  ativo: boolean
+  data_solicitacao: string
+  data_aprovacao: string | null
+}

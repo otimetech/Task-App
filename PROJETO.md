@@ -437,7 +437,7 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 - [x] Telas de auth: cadastro, login, recuperar senha
 - [x] Onboarding: criar empresa / solicitar acesso por CNPJ / aguardando aprovação
 - [x] Seleção de empresa (usuário com vários vínculos)
-- [ ] Tela de gestão de usuários (aprovar, rejeitar, alterar papel, desativar)
+- [x] Tela de gestão de usuários (aprovar, rejeitar, alterar papel, desativar)
 - [ ] Configurações da empresa (dados, logo, cores)
 
 ### Fase 3 — Cadastros
@@ -512,3 +512,4 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 | 2026-10-03 | Frontend base, task 10: telas de login, cadastro, recuperar e redefinir senha (marca da empresa no subdomínio); verificadas no navegador (senha errada, destino após login, tema). |
 | 2026-10-03 | Frontend base, task 11: telas da raiz: minhas empresas, criar empresa (subdomínio com checagem ao digitar, máscara de CNPJ) e solicitar acesso; verificadas no navegador. Novos dados de teste: empresa `teste-admin` e usuário `teste.vazio@manutgo.test`. |
 | 2026-10-03 | Frontend base, task 12: layout do app (sidebar, topbar, bottom navigation mobile), Início provisório e tela `/sem-acesso` com solicitação de acesso; verificados no navegador (admin, pendente, sem vínculo, mobile 390 px). |
+| 2026-10-03 | Frontend base, task 13: tela `/usuarios` (admin): aprovar com papel e matrícula, rejeitar, alterar papel, desativar, reativar; mensagens de regra do banco; verificada no navegador (matrícula repetida, último admin, técnico desativado/reativado). |

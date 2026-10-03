@@ -360,7 +360,7 @@ O modelo cobre apenas desktop. Regras de adaptação (pendente de modelo visual 
 | Agenda | ⬜ Pendente | |
 | Clientes / unidades | ⬜ Pendente | |
 | Checklists | ⬜ Pendente | |
-| Gestão de usuários | ⬜ Pendente | |
+| Gestão de usuários | ✅ Derivado dos tokens (2026-10-03) | `AppTabs` Ativos/Pendentes/Desativados + lista em `AppCard` (avatar, nome, e-mail, matrícula, badge de papel); ações em `ConfirmDialog` |
 | Configurações da empresa | ⬜ Pendente | |
 
 ---
