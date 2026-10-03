@@ -3,7 +3,7 @@
 > **Documento central do projeto.** Toda decisão, mudança de banco, funcionalidade entregue e pendência é registrada aqui.
 > **Regra:** este arquivo deve ser atualizado a cada alteração no projeto (código, banco, decisão ou escopo).
 
-- **Última atualização:** 2026-09-29
+- **Última atualização:** 2026-10-03
 - **Responsável:** Otimetech
 - **Fonte original do escopo:** `Escopo Projeto.docx`
 
@@ -51,6 +51,8 @@ Experiência responsiva, com foco distinto por dispositivo:
 | Projeto Supabase | `hezxupksbntcwaxkmlmg` |
 | Repositório | https://github.com/otimetech/Task-App (branch `main`) |
 | Hospedagem frontend | VPS própria com Coolify |
+| Renderização | SSR (Nuxt server resolve o tenant pelo host) |
+| Domínio base | `manutgo.otimetech.com.br` (empresas em `<subdominio>.manutgo.otimetech.com.br`) |
 
 > Flutter foi descartado (2026-09-29). O resumo do backend no `.docx` ainda cita Flutter; vale o Nuxt.
 
@@ -69,9 +71,9 @@ Resumo: fundo `#EEF0F2`, cards brancos com borda sutil, cor de marca azul petró
 **Modelo:** um único banco Supabase compartilhado. Cada empresa (tenant) tem seus dados isolados por `id_empresa` + políticas RLS, e seu próprio domínio/subdomínio com identidade visual própria.
 
 ```
-empresaabc.com.br ─┐
-os.xyz.com.br     ─┼─► mesmo frontend Nuxt (1 deploy) ─► mesmo Supabase (1 projeto)
-abc.otimetech.app ─┘          │                                  │
+manutgo.otimetech.com.br       ─┐  (raiz: login geral + onboarding, marca padrão)
+abc.manutgo.otimetech.com.br   ─┼─► mesmo frontend Nuxt (1 deploy) ─► mesmo Supabase (1 projeto)
+os.xyz.com.br (Fase 7)         ─┘          │                                  │
                      resolve tenant pelo host             RLS isola por id_empresa
                      (apenas branding)                    (segurança real)
 ```
@@ -86,18 +88,21 @@ abc.otimetech.app ─┘          │                                  │
 6. **Storage** organizado por prefixo `{id_empresa}/...`, com policies em `storage.objects`.
 7. **Um usuário pode pertencer a várias empresas** (tabela `empresa_usuarios` N:N). O mesmo e-mail é a mesma conta em todos os tenants.
 
-### Resolução do tenant pelo domínio (planejado)
+### Resolução do tenant pelo domínio
 
-- Tabela `empresa_dominios` (`id_empresa`, `dominio` único e minúsculo, `tipo` subdominio/proprio, `verificado`, `principal`).
-- RPC pública `resolver_tenant(p_host)` executável por `anon`, retornando **apenas** dados de branding (nome fantasia, logo, cores).
-- Nuxt resolve o host no servidor (middleware/plugin SSR) e aplica o tema.
+- **Banco: implementado (2026-10-03).** Tabela `empresa_dominios` (`id_empresa`, `dominio` único e minúsculo, `tipo` subdominio/proprio, `verificado`, `principal`).
+  - `tipo = 'subdominio'`: `dominio` guarda só o slug (ex.: `abc`). Um por empresa, escolhido pelo admin ao criar a empresa; alterável via `alterar_subdominio`.
+  - `tipo = 'proprio'`: `dominio` guarda o host completo (Fase 7).
+- RPC pública `resolver_tenant(p_host)` executável por `anon`, retornando **apenas** branding (`id_empresa`, nome, logo, cores, subdomínio). Domínio raiz ou host desconhecido: nenhuma linha (marca padrão).
+- Domínio raiz `manutgo.otimetech.com.br`: login geral + onboarding; após login, `listar_minhas_empresas()` permite escolher a empresa e redirecionar ao subdomínio.
+- Nuxt (SSR) resolve o host no servidor (middleware/plugin) e aplica o tema — Fase 2.
 
 ### Limitações do Supabase a considerar
 
 - **Auth único por projeto:** templates de e-mail e SMTP são globais. Para e-mails com marca de cada empresa: Send Email Hook + Edge Function.
-- **Redirect URLs:** cada domínio próprio precisa estar na allowlist do Auth. Subdomínios aceitam wildcard (`https://*.otimetech.app/**`). Domínios próprios: automatizar via Management API ou centralizar o login em um domínio.
+- **Redirect URLs:** cada domínio próprio precisa estar na allowlist do Auth. Subdomínios aceitam wildcard (`https://*.manutgo.otimetech.com.br/**`). Domínios próprios: automatizar via Management API ou centralizar o login em um domínio.
 - **Domínio customizado da API Supabase:** um por projeto. A API permanece em endereço único; só o frontend usa domínios por tenant.
-- **Subdomínios (fase inicial):** DNS wildcard `*.<dominio-base>` apontando para a VPS; Coolify (Traefik) com certificado wildcard via desafio DNS do Let's Encrypt.
+- **Subdomínios (fase inicial):** DNS wildcard `*.manutgo.otimetech.com.br` apontando para a VPS; Coolify (Traefik) com certificado wildcard via desafio DNS do Let's Encrypt.
 - **SSL de domínios próprios (Fase 7):** Traefik/Coolify emite certificado por domínio (desafio HTTP). A empresa cria um CNAME, o sistema verifica e marca `verificado = true`.
 
 ---
@@ -129,7 +134,9 @@ abc.otimetech.app ─┘          │                                  │
 ```
 Criar conta (Supabase Auth)
    → trigger on_auth_user_created → handle_new_user() → public.users
-   → "Criar empresa"  → criar_empresa(razão, fantasia, cnpj, matrícula) → vira administrador (aprovado)
+   → "Criar empresa"  → verificar_subdominio() → criar_empresa(razão, fantasia, cnpj, matrícula, subdomínio)
+        → vira administrador (aprovado); empresa nasce com subdomínio
+   → listar_minhas_empresas() → escolhe empresa → redireciona para <subdominio>.manutgo.otimetech.com.br
    → "Entrar em empresa" → informa CNPJ → solicitar_acesso_empresa() → pendente (tecnico)
         → admin: listar_usuarios_empresa()
               → aprovar_usuario(papel, matrícula) | rejeitar_usuario()
@@ -203,31 +210,38 @@ Trilha de auditoria: criação, início, fotos adicionadas, assinatura, conclus�
 
 ## 6. Banco de dados — estado atual
 
-Atualizado em 2026-09-29. Migrations em `supabase/migrations/`, todas registradas no histórico remoto:
+Atualizado em 2026-10-03. Migrations em `supabase/migrations/`, todas registradas no histórico remoto:
 
 | Versão | Nome | Conteúdo |
 |---|---|---|
 | `20260929000000` | `baseline` | Schema original criado pelo SQL Editor (reconstruído do catálogo) |
 | `20260930022111` | `correcoes_fundacao` | Correções P1–P7, P9–P11, P13, P14 + matrícula |
+| `20261003180455` | `branding_dominios` | Branding/assinatura em `empresas`, `empresa_dominios`, subdomínio em `criar_empresa`, `resolver_tenant`, `listar_minhas_empresas` |
 
 ### Tabelas (`public`)
 
 | Tabela | Colunas principais | RLS |
 |---|---|---|
 | `users` | `id` (uuid, FK `auth.users`), `nome`, `email`, `telefone`, `foto`, `ativo`, `created_at` | ✅ |
-| `empresas` | `id` (bigint identity), `razao_social`, `nome_fantasia`, `cnpj` (único; maiúsculas sem máscara; check `cnpj_valido`), `email`, `telefone`, `endereco`, `numero`, `complemento`, `bairro`, `cidade`, `estado`, `cep`, `logo`, `ativo`, `created_at` | ✅ |
+| `empresas` | `id` (bigint identity), `razao_social`, `nome_fantasia`, `cnpj` (único; maiúsculas sem máscara; check `cnpj_valido`), `email`, `telefone`, `endereco`, `numero`, `complemento`, `bairro`, `cidade`, `estado`, `cep`, `logo`, `site`, `responsavel`, `cor_primaria`/`cor_secundaria` (hex `#RRGGBB`; null = paleta padrão), `plano` (texto), `status_assinatura` (teste/ativa/suspensa/cancelada; default `teste`), `ativo`, `created_at` | ✅ |
+| `empresa_dominios` | `id`, `id_empresa` (FK cascade), `dominio` (único, minúsculo), `tipo` (subdominio/proprio), `verificado`, `principal`, `created_at`; 1 subdomínio e 1 principal por empresa | ✅ |
 | `empresa_usuarios` | `id`, `id_empresa`, `id_usuario`, `tipo_acesso` (administrador/supervisor/tecnico; default `tecnico`), `matricula` (obrigatória se aprovado; única por empresa), `aprovado`, `ativo`, `data_aprovacao`, `aprovado_por`, `created_at`; único `(id_empresa, id_usuario)` | ✅ |
 
 ### Colunas editáveis diretamente pelo cliente (`authenticated`)
 - `users`: somente `nome`, `telefone`, `foto` (e-mail vem do Auth; `ativo` é do sistema).
-- `empresas` (só admin, via RLS): dados cadastrais e `logo`. **Não**: `cnpj`, `ativo`.
+- `empresas` (só admin, via RLS): dados cadastrais, `logo`, `site`, `responsavel`, `cor_primaria`, `cor_secundaria`. **Não**: `cnpj`, `ativo`, `plano`, `status_assinatura`.
+- `empresa_dominios`: nenhuma escrita direta; só via RPC.
 - `empresa_usuarios`: nenhuma escrita direta; só via RPC.
 
 ### Funções
 
 | Função | Acesso | Descrição |
 |---|---|---|
-| `criar_empresa(razao_social, nome_fantasia, cnpj, matricula)` | authenticated | Valida CNPJ, cria empresa e vincula criador como administrador aprovado |
+| `criar_empresa(razao_social, nome_fantasia, cnpj, matricula, subdominio)` | authenticated | Valida CNPJ e subdomínio, cria empresa + subdomínio e vincula criador como administrador aprovado |
+| `verificar_subdominio(subdominio)` | authenticated | Valida formato/reservados e informa disponibilidade |
+| `alterar_subdominio(id_empresa, subdominio)` | authenticated (só admin) | Troca o subdomínio da empresa |
+| `resolver_tenant(host)` | **anon** + authenticated | Branding da empresa pelo host (só nome, logo, cores, subdomínio) |
+| `listar_minhas_empresas()` | authenticated | Vínculos do usuário logado (inclui pendentes) com nome, logo, subdomínio e status |
 | `solicitar_acesso_empresa(cnpj)` | authenticated | Cria vínculo pendente (`tecnico`) com a empresa do CNPJ |
 | `listar_usuarios_empresa(id_empresa)` | authenticated (só admin) | Lista vínculos com nome, e-mail, foto, matrícula, papel e status |
 | `aprovar_usuario(id_empresa, id_usuario, tipo_acesso, matricula)` | authenticated (só admin) | Aprova **somente pendentes**, define papel e matrícula |
@@ -240,9 +254,10 @@ Atualizado em 2026-09-29. Migrations em `supabase/migrations/`, todas registrada
 | `usuario_admin_empresa(id_empresa)` | helper RLS | Idem, com papel administrador |
 | `normalizar_cnpj(cnpj)` / `cnpj_valido(cnpj)` | authenticated | Normalização e validação de CNPJ numérico/alfanumérico |
 | `contar_admins_ativos(id_empresa)` | interno | Usado nas regras do último admin |
+| `dominio_base()` / `normalizar_subdominio()` / `validar_subdominio()` | interno | Domínio base fixo (`manutgo.otimetech.com.br`) e regras do slug: 3–63 caracteres `[a-z0-9-]`, sem hífen nas pontas, lista de reservados (www, app, api, admin…) |
 | `handle_new_user()` / `handle_user_email_change()` | interno (trigger) | Criação de perfil e sincronização de e-mail |
 
-- `anon` não executa nenhuma função. Funções novas em `public` não recebem EXECUTE automático para `anon`/PUBLIC (default privileges); conceder explicitamente quando necessário (ex.: `resolver_tenant`).
+- `anon` executa somente `resolver_tenant`. Funções novas em `public` não recebem EXECUTE automático para `anon`/PUBLIC (default privileges); conceder explicitamente quando necessário (ex.: `resolver_tenant`).
 - Retorno padrão das RPCs de escrita: `json` `{ success, message, ... }`.
 
 ### Triggers
@@ -258,6 +273,7 @@ Atualizado em 2026-09-29. Migrations em `supabase/migrations/`, todas registrada
 | `empresas` | `usuario_visualiza_empresa` | SELECT | `usuario_pertence_empresa(id)` |
 | `empresas` | `admin_atualiza_empresa` | UPDATE | `usuario_admin_empresa(id)` |
 | `empresa_usuarios` | `visualiza_vinculos` | SELECT | próprio vínculo ou admin da empresa |
+| `empresa_dominios` | `membro_visualiza_dominios` | SELECT | `usuario_pertence_empresa(id_empresa)` |
 
 ### Índices
 - `empresas_cnpj_unique (cnpj)`
@@ -266,9 +282,12 @@ Atualizado em 2026-09-29. Migrations em `supabase/migrations/`, todas registrada
 - `idx_empresa_usuarios_usuario (id_usuario)`
 - `idx_empresa_usuarios_aprovado (id_empresa, aprovado)`
 - `idx_empresa_usuarios_aprovado_por (aprovado_por)`
+- `empresa_dominios_dominio_unique (dominio)`
+- `empresa_dominios_subdominio_unique (id_empresa) where tipo = 'subdominio'`
+- `empresa_dominios_principal_unique (id_empresa) where principal`
 
-### Advisors (após a migration)
-- Segurança: restam avisos esperados de "authenticated executa SECURITY DEFINER" (RPCs com verificação interna) e P8.
+### Advisors (após `branding_dominios`)
+- Segurança: restam avisos esperados de "authenticated executa SECURITY DEFINER" (RPCs com verificação interna), "anon executa `resolver_tenant`" (intencional, só branding) e P8.
 - Performance: só "índice não usado" (banco ainda sem dados).
 
 ---
@@ -344,13 +363,24 @@ checklist_itens
 | 2026-09-29 | Design: fonte Inter, paleta azul petróleo do modelo, mapeamento do menu lateral (`design.md` seção 7) e interface em pt-BR — confirmados | Aprovação do responsável |
 | 2026-09-29 | Estilo com Tailwind CSS (`@nuxtjs/tailwindcss`) no lugar de Twind | Twind está sem manutenção; Tailwind é o padrão no Nuxt |
 | 2026-09-29 | UI segue exatamente o modelo `design_modelo.png`; `design.md` é o arquivo central de design | Padrão visual único e fiel ao modelo aprovado |
+| 2026-10-03 | Renderização do Nuxt: SSR | Resolver o tenant pelo host no servidor, sem flash de tema |
+| 2026-10-03 | Domínio base `manutgo.otimetech.com.br`; cada empresa em `<subdominio>.manutgo.otimetech.com.br` (DNS + certificado wildcard) | Domínio `otimetech.com.br` já é do responsável |
+| 2026-10-03 | Subdomínio escolhido pelo admin ao criar a empresa; pode ser alterado depois pelo admin | Definição do responsável |
+| 2026-10-03 | Domínio raiz: login geral + onboarding com marca padrão; após login, escolhe empresa e redireciona ao subdomínio | Definição do responsável |
+| 2026-10-03 | Campos novos em `empresas`: cores principal/secundária, site, responsável, plano (texto) e status da assinatura (teste/ativa/suspensa/cancelada, default `teste`). Plano e status não são editáveis pelo admin da empresa | Definição do responsável; tabelas de planos ficam para a Fase 7 |
+| 2026-10-03 | Backend + frontend divididos em 5 subprojetos (Frontend base → Cadastros → Checklists → Ordens de Serviço → Gestão), cada um com spec → plano → implementação. Começa pelo Frontend base | Escopo grande demais para uma entrega só |
+| 2026-10-03 | Login na raiz e no subdomínio, com sessão compartilhada (cookie do domínio `.manutgo.otimetech.com.br`) | Definição do responsável |
+| 2026-10-03 | Subdomínio sem vínculo ativo: tela de aviso com opções (solicitar acesso, minhas empresas, sair) | Definição do responsável |
+| 2026-10-03 | Telas sem modelo visual são derivadas dos tokens do `design.md` e registradas nele; aprovação ao ver rodando | Definição do responsável |
+| 2026-10-03 | Frontend em `web/`, Nuxt 4 SSR, `@nuxtjs/supabase`, Vitest. Spec: `docs/superpowers/specs/2026-10-03-frontend-base-design.md` | Aprovado pelo responsável |
 
 ---
 
 ## 10. Decisões pendentes
 
-- [ ] **Domínio base** da plataforma.
-- [ ] **Renderização:** SSR (necessário para resolver tenant pelo host no servidor) ou SPA.
+- [x] ~~Domínio base~~ → `manutgo.otimetech.com.br` (2026-10-03).
+- [x] ~~Renderização~~ → SSR (2026-10-03).
+- [ ] **Efeito de `status_assinatura`** (suspensa/cancelada) no acesso dos usuários — definir até a Fase 7.
 - [ ] **Geração do PDF:** no navegador, Edge Function ou serviço dedicado.
 
 ---
@@ -366,7 +396,7 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 - [x] Criar `design.md` a partir do modelo `design_modelo.png`
 - [x] Confirmar fonte, paleta, mapeamento do menu lateral e idioma da interface (`design.md`)
 - [ ] Modelos visuais das demais telas e do mobile (`design.md` seção 11)
-- [ ] Resolver [decisões pendentes](#10-decisões-pendentes)
+- [~] Resolver [decisões pendentes](#10-decisões-pendentes) (domínio base e renderização resolvidos)
 - [x] `git init` (branch `main`) + `.gitignore`
 - [x] Repositório remoto: `origin` = https://github.com/otimetech/Task-App (vazio)
 - [x] Primeiro commit e push para `origin/main` (repositório privado)
@@ -385,11 +415,15 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 - [x] Matrícula em `empresa_usuarios`
 - [x] RPCs `alterar_papel_usuario`, `desativar_usuario`, `reativar_usuario`, `listar_colegas_empresa`
 - [ ] P8: ativar proteção contra senha vazada no painel do Supabase (manual)
-- [ ] Campos de branding (cores, site, responsável, plano, status da assinatura)
-- [ ] Tabela `empresa_dominios` + RPC `resolver_tenant`
+- [x] Campos de branding (cores, site, responsável, plano, status da assinatura)
+- [x] Tabela `empresa_dominios` + RPCs `resolver_tenant`, `verificar_subdominio`, `alterar_subdominio`, `listar_minhas_empresas`; `criar_empresa` com subdomínio (migration `20261003180455_branding_dominios`, 27/27 testes a seco)
 
 ### Fase 2 — Frontend base (Nuxt)
-- [ ] Criar projeto Nuxt + Tailwind CSS (`@nuxtjs/tailwindcss`)
+- [~] Spec do Frontend base (`docs/superpowers/specs/2026-10-03-frontend-base-design.md`) — aguardando revisão
+- [ ] Plano de implementação do Frontend base
+- [ ] Migration `storage_logos` (bucket `logos` + RPC `solicitar_acesso_empresa_por_id`)
+- [ ] Infra: DNS wildcard `*.manutgo.otimetech.com.br` + certificado wildcard no Coolify; Redirect URLs do Auth (`https://manutgo.otimetech.com.br/**`, `https://*.manutgo.otimetech.com.br/**`)
+- [ ] Criar projeto Nuxt (SSR) + Tailwind CSS (`@nuxtjs/tailwindcss`)
 - [ ] Integração Supabase (`@nuxtjs/supabase`)
 - [ ] Resolução de tenant pelo host + tema dinâmico
 - [ ] Layout desktop (menu lateral + topbar)
@@ -456,3 +490,5 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 | 2026-09-29 | Matrícula definida (todos os usuários, informada pelo admin ao aprovar, única por empresa) e suporte a CNPJ alfanumérico. |
 | 2026-09-29 | Migration de correção `20260929010000_correcoes_fundacao.sql` escrita e testada a seco no banco (39/39 testes, rollback total, banco intacto). Novos problemas identificados: P13, P14. |
 | 2026-09-29 | Migration `correcoes_fundacao` aplicada no banco (versão `20260930022111`; arquivo local renomeado para a mesma versão). Baseline registrada no histórico remoto. P1–P7, P9–P14 corrigidos; P8 depende de ação manual no painel. Seção 6 atualizada. |
+| 2026-10-03 | Decididos: SSR, domínio base `manutgo.otimetech.com.br` com subdomínio por empresa (escolhido pelo admin), raiz com login geral, campos de branding/assinatura. Migration `branding_dominios` (versão `20261003180455`) testada a seco (27/27) e aplicada: novos campos em `empresas`, tabela `empresa_dominios`, `criar_empresa` com subdomínio, RPCs `verificar_subdominio`, `alterar_subdominio`, `resolver_tenant` (anon) e `listar_minhas_empresas`. Fase 1 concluída, exceto P8 (manual). |
+| 2026-10-03 | Brainstorming do Frontend base: decididos login na raiz e no subdomínio com sessão compartilhada, tela de aviso para subdomínio sem vínculo, telas derivadas dos tokens, Nuxt 4 em `web/` com `@nuxtjs/supabase`. Spec escrita em `docs/superpowers/specs/2026-10-03-frontend-base-design.md` (inclui migration futura `storage_logos` e RPC `solicitar_acesso_empresa_por_id`). |
