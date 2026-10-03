@@ -419,8 +419,8 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 - [x] Tabela `empresa_dominios` + RPCs `resolver_tenant`, `verificar_subdominio`, `alterar_subdominio`, `listar_minhas_empresas`; `criar_empresa` com subdomínio (migration `20261003180455_branding_dominios`, 27/27 testes a seco)
 
 ### Fase 2 — Frontend base (Nuxt)
-- [~] Spec do Frontend base (`docs/superpowers/specs/2026-10-03-frontend-base-design.md`) — aguardando revisão
-- [ ] Plano de implementação do Frontend base
+- [x] Spec do Frontend base (`docs/superpowers/specs/2026-10-03-frontend-base-design.md`)
+- [~] Plano de implementação do Frontend base (`docs/superpowers/plans/2026-10-03-frontend-base.md`, 15 tasks) — aguardando revisão
 - [ ] Migration `storage_logos` (bucket `logos` + RPC `solicitar_acesso_empresa_por_id`)
 - [ ] Infra: DNS wildcard `*.manutgo.otimetech.com.br` + certificado wildcard no Coolify; Redirect URLs do Auth (`https://manutgo.otimetech.com.br/**`, `https://*.manutgo.otimetech.com.br/**`)
 - [ ] Criar projeto Nuxt (SSR) + Tailwind CSS (`@nuxtjs/tailwindcss`)
@@ -492,3 +492,4 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 | 2026-09-29 | Migration `correcoes_fundacao` aplicada no banco (versão `20260930022111`; arquivo local renomeado para a mesma versão). Baseline registrada no histórico remoto. P1–P7, P9–P14 corrigidos; P8 depende de ação manual no painel. Seção 6 atualizada. |
 | 2026-10-03 | Decididos: SSR, domínio base `manutgo.otimetech.com.br` com subdomínio por empresa (escolhido pelo admin), raiz com login geral, campos de branding/assinatura. Migration `branding_dominios` (versão `20261003180455`) testada a seco (27/27) e aplicada: novos campos em `empresas`, tabela `empresa_dominios`, `criar_empresa` com subdomínio, RPCs `verificar_subdominio`, `alterar_subdominio`, `resolver_tenant` (anon) e `listar_minhas_empresas`. Fase 1 concluída, exceto P8 (manual). |
 | 2026-10-03 | Brainstorming do Frontend base: decididos login na raiz e no subdomínio com sessão compartilhada, tela de aviso para subdomínio sem vínculo, telas derivadas dos tokens, Nuxt 4 em `web/` com `@nuxtjs/supabase`. Spec escrita em `docs/superpowers/specs/2026-10-03-frontend-base-design.md` (inclui migration futura `storage_logos` e RPC `solicitar_acesso_empresa_por_id`). |
+| 2026-10-03 | Spec do Frontend base aprovada. Plano de implementação escrito em `docs/superpowers/plans/2026-10-03-frontend-base.md` (15 tasks). Nome exibido da plataforma configurável (`NUXT_PUBLIC_APP_NAME`, padrão `ManutGO`) — pendente de confirmação. |
