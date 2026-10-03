@@ -26,8 +26,9 @@ export default defineNuxtConfig({
     redirect: false,
     types: '~~/shared/types/database.ts',
     cookieOptions: {
-      // Domínio compartilhado entre raiz e subdomínios (ex.: .manutgo.otimetech.com.br)
-      domain: process.env.NUXT_PUBLIC_COOKIE_DOMAIN || undefined,
+      // Domínio compartilhado entre raiz e subdomínios; definido em runtime por
+      // NUXT_PUBLIC_SUPABASE_COOKIE_OPTIONS_DOMAIN (ex.: .manutgo.otimetech.com.br). Vazio = host atual.
+      domain: '',
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
     },
@@ -36,7 +37,6 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       baseDomain: 'localhost',
-      cookieDomain: '',
       appName: 'ManutGO',
     },
   },

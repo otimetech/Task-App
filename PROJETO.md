@@ -500,3 +500,4 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 | 2026-10-03 | Frontend base, task 3: `gerarVariaveisTema` e `estiloTema` em `web/shared/utils/tema.ts` (6 testes). |
 | 2026-10-03 | Frontend base, task 4: validação de CNPJ (numérico/alfanumérico) e subdomínio no cliente, espelhando o banco (`web/shared/utils/cnpj.ts`, `subdominio.ts`). |
 | 2026-10-03 | Frontend base, task 5: helper `rpc()` + `ErroApp` (mensagens do banco, erro de rede genérico) em `web/shared/utils/rpc.ts`. |
+| 2026-10-03 | Frontend base, task 6: tenant resolvido no SSR (`server/middleware/tenant.ts`, cache 60 s), tema por empresa no `<html>`, página de erro "Empresa não encontrada". Sessão compartilhada entre raiz e subdomínios validada com `lvh.me`; domínio do cookie em runtime (`NUXT_PUBLIC_SUPABASE_COOKIE_OPTIONS_DOMAIN`). **Dados de teste no banco:** empresa `demo-ui` (id 3) e usuários `teste.admin@manutgo.test` / `teste.tecnico@manutgo.test` — remover ao final. |
