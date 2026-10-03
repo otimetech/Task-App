@@ -18,4 +18,5 @@ if (tenant.value.contexto === 'desconhecido') {
   <NuxtLayout>
     <NuxtPage />
   </NuxtLayout>
+  <AppToast />
 </template>
