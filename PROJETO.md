@@ -421,11 +421,11 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 
 ### Fase 2 — Frontend base (Nuxt)
 - [x] Spec do Frontend base (`docs/superpowers/specs/2026-10-03-frontend-base-design.md`)
-- [~] Plano de implementação do Frontend base (`docs/superpowers/plans/2026-10-03-frontend-base.md`, 15 tasks) — aguardando revisão
+- [x] Plano de implementação do Frontend base (`docs/superpowers/plans/2026-10-03-frontend-base.md`, 15 tasks) — execução na branch `feat/frontend-base`
 - [ ] Migration `storage_logos` (bucket `logos` + RPC `solicitar_acesso_empresa_por_id`)
 - [ ] Infra: DNS wildcard `*.manutgo.otimetech.com.br` + certificado wildcard no Coolify; Redirect URLs do Auth (`https://manutgo.otimetech.com.br/**`, `https://*.manutgo.otimetech.com.br/**`)
-- [ ] Criar projeto Nuxt (SSR) + Tailwind CSS (`@nuxtjs/tailwindcss`)
-- [ ] Integração Supabase (`@nuxtjs/supabase`)
+- [x] Criar projeto Nuxt (SSR) + Tailwind CSS (`@nuxtjs/tailwindcss`) em `web/`
+- [x] Integração Supabase (`@nuxtjs/supabase`)
 - [ ] Resolução de tenant pelo host + tema dinâmico
 - [ ] Layout desktop (menu lateral + topbar)
 - [ ] Layout mobile (bottom navigation)
@@ -495,3 +495,4 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 | 2026-10-03 | Brainstorming do Frontend base: decididos login na raiz e no subdomínio com sessão compartilhada, tela de aviso para subdomínio sem vínculo, telas derivadas dos tokens, Nuxt 4 em `web/` com `@nuxtjs/supabase`. Spec escrita em `docs/superpowers/specs/2026-10-03-frontend-base-design.md` (inclui migration futura `storage_logos` e RPC `solicitar_acesso_empresa_por_id`). |
 | 2026-10-03 | Spec do Frontend base aprovada. Plano de implementação escrito em `docs/superpowers/plans/2026-10-03-frontend-base.md` (15 tasks). Nome exibido da plataforma configurável (`NUXT_PUBLIC_APP_NAME`, padrão `ManutGO`) — pendente de confirmação. |
 | 2026-10-03 | Nome da plataforma confirmado: ManutGO. |
+| 2026-10-03 | Frontend base, task 1: projeto Nuxt 4 criado em `web/` (Tailwind com tokens do `design.md`, `@nuxtjs/supabase`, Vitest, fonte Inter, tipos do banco em `web/shared/types/database.ts`). |
