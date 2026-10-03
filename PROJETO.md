@@ -390,6 +390,17 @@ checklist_itens
 - [ ] **Efeito de `status_assinatura`** (suspensa/cancelada) no acesso dos usuários — definir até a Fase 7.
 - [ ] **Geração do PDF:** no navegador, Edge Function ou serviço dedicado.
 
+### Melhorias menores do Frontend base (revisão de 2026-10-03)
+
+- [ ] Cache de tenant: guardar "empresa não encontrada" por menos tempo (~5 s); hoje, após trocar o subdomínio, o novo endereço pode mostrar "Empresa não encontrada" por até 60 s se alguém o acessou antes.
+- [ ] Revalidar vínculo ao navegar para rotas de admin (admin rebaixado por outro admin continua vendo o menu até recarregar; o banco já bloqueia as ações).
+- [ ] Logos SVG no bucket público: avaliar bloquear SVG ou sanitizar no upload.
+- [ ] `usuario_admin_empresa` não confere `empresas.ativo`: admin de empresa desativada ainda altera a logo.
+- [ ] Login na raiz com uma só empresa ignora o `redirect` pedido (vai direto ao subdomínio).
+- [ ] Sessão expirada no meio da navegação mostra erro do banco em vez de levar ao login.
+- [ ] Documentar que o app precisa de proxy (Traefik/Coolify) sobrescrevendo `X-Forwarded-Host`.
+- [ ] Host IPv6 (`[::1]:3000`) não é interpretado (só dev).
+
 ---
 
 ## 11. Checklist
@@ -440,8 +451,8 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 - [x] Seleção de empresa (usuário com vários vínculos)
 - [x] Tela de gestão de usuários (aprovar, rejeitar, alterar papel, desativar)
 - [x] Configurações da empresa (dados, logo, cores, subdomínio)
-- [ ] Remover dados de teste do banco (empresas `demo-ui` e `teste-admin2`, usuários `teste.*@manutgo.test`, logo de teste) — aguardando confirmação do responsável
-- [ ] Revisão final da branch `feat/frontend-base` e merge em `main`
+- [x] Dados de teste removidos do banco (empresas `demo-ui` e `teste-admin2`, usuários `teste.*@manutgo.test`, logo de teste)
+- [x] Revisão final da branch `feat/frontend-base` (sem críticos; 1 importante corrigido) e merge em `main`
 
 ### Fase 3 — Cadastros
 - [ ] Clientes
@@ -518,3 +529,4 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 | 2026-10-03 | Frontend base, task 13: tela `/usuarios` (admin): aprovar com papel e matrícula, rejeitar, alterar papel, desativar, reativar; mensagens de regra do banco; verificada no navegador (matrícula repetida, último admin, técnico desativado/reativado). |
 | 2026-10-03 | Frontend base, task 14: tela `/configuracoes` (admin): dados cadastrais, logo (bucket `logos`, até 1 MB), cores com prévia ao vivo e alteração de subdomínio; verificada no navegador. Empresa de teste agora em `teste-admin2`. |
 | 2026-10-03 | Frontend base, task 15: fechamento: `web/README.md` (como rodar, variáveis, `*.localhost`/`lvh.me`), 64 testes passando, build ok, sessão compartilhada raiz ↔ subdomínio verificada no navegador com `lvh.me` (login, entrar, sair). Remoção dos dados de teste aguarda confirmação. |
+| 2026-10-03 | Revisão final do Frontend base: nenhum problema crítico; corrigido o cache de tenant sem limite (agora 1000 hosts, expiração removida na leitura; 3 testes). Dados de teste removidos do banco com autorização do responsável. Pendências menores registradas na seção 10. Merge de `feat/frontend-base` em `main`. |

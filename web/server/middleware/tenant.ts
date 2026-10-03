@@ -1,15 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '../../shared/types/database'
 import type { EmpresaTenant, Tenant } from '../../shared/types/app'
+import { CacheTtl } from '../../shared/utils/cache'
 import { analisarHost } from '../../shared/utils/host'
 
 // Cache por host do banco: evita consultar resolver_tenant a cada requisição
-const TTL_MS = 60_000
-const cache = new Map<string, { valor: Tenant; expira: number }>()
+// Limite de itens: hosts arbitrários no header Host não podem crescer a memória
+const cache = new CacheTtl<Tenant>(1000, 60_000)
 
 async function resolver(hostBanco: string, url: string, key: string): Promise<Tenant> {
   const emCache = cache.get(hostBanco)
-  if (emCache && emCache.expira > Date.now()) return emCache.valor
+  if (emCache) return emCache
 
   const supabase = createClient<Database>(url, key, { auth: { persistSession: false } })
   const { data, error } = await supabase.rpc('resolver_tenant', { p_host: hostBanco })
@@ -17,7 +18,7 @@ async function resolver(hostBanco: string, url: string, key: string): Promise<Te
 
   const linha = data?.[0] as EmpresaTenant | undefined
   const valor: Tenant = linha ? { contexto: 'empresa', empresa: linha } : { contexto: 'desconhecido' }
-  cache.set(hostBanco, { valor, expira: Date.now() + TTL_MS })
+  cache.set(hostBanco, valor)
   return valor
 }
 
