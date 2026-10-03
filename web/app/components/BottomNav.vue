@@ -2,7 +2,7 @@
 import { ITENS_BOTTOM_NAV, itensMenu } from '#shared/utils/menu'
 
 const route = useRoute()
-const { ehAdmin, nomeUsuario, papel } = useEmpresaAtual()
+const { ehAdmin, nomeUsuario, papel, pendentes } = useEmpresaAtual()
 const { urlDaRaiz } = useTenant()
 const sair = useSair()
 const maisAberto = ref(false)
@@ -28,6 +28,7 @@ watch(() => route.path, () => (maisAberto.value = false))
       <template v-for="item in itensMais" :key="item.id">
         <NuxtLink v-if="item.rota" :to="item.rota" class="flex h-10 items-center gap-2 px-2 text-sm text-ink-secondary">
           <MenuIcone :nome="item.icone" /> {{ item.rotulo }}
+          <span v-if="item.id === 'usuarios' && pendentes" class="ml-auto rounded-badge bg-warning-500 px-1.5 text-[11px] font-semibold text-white">{{ pendentes }}</span>
         </NuxtLink>
         <span v-else class="flex h-10 items-center gap-2 px-2 text-sm text-ink-subtle">
           <MenuIcone :nome="item.icone" /> {{ item.rotulo }}
@@ -47,7 +48,11 @@ watch(() => route.path, () => (maisAberto.value = false))
           :class="maisAberto ? 'text-brand-700' : 'text-ink-secondary'"
           @click="maisAberto = !maisAberto"
         >
-          <MenuIcone :nome="item.icone" /> {{ item.rotulo }}
+          <span class="relative">
+            <MenuIcone :nome="item.icone" />
+            <span v-if="pendentes" class="absolute -right-1 -top-1 size-2 rounded-full bg-warning-500" aria-label="Solicitações pendentes" />
+          </span>
+          {{ item.rotulo }}
         </button>
         <NuxtLink
           v-else-if="item.rota"

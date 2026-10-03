@@ -7,7 +7,8 @@ const gestao = useUsuariosEmpresa(empresa.value!.id_empresa)
 const { usuarios, carregando, erroCarga } = gestao
 await gestao.carregar()
 
-const aba = ref('ativos')
+// Com solicitações pendentes, abre direto na aba de aprovação
+const aba = ref(usuarios.value.some((u) => !u.aprovado) ? 'pendentes' : 'ativos')
 const grupos = computed(() => ({
   ativos: usuarios.value.filter((u) => u.aprovado && u.ativo),
   pendentes: usuarios.value.filter((u) => !u.aprovado),

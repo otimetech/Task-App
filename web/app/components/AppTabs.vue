@@ -4,7 +4,7 @@ const ativa = defineModel<string>({ required: true })
 </script>
 
 <template>
-  <nav class="flex gap-6 overflow-x-auto border-b border-divider">
+  <nav class="flex gap-6 overflow-x-auto overflow-y-hidden border-b border-divider [scrollbar-width:none]">
     <button
       v-for="aba in abas"
       :key="aba.id"

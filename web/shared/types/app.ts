@@ -22,6 +22,8 @@ export type Vinculo = {
   aprovado: boolean
   ativo: boolean
   empresa_ativa: boolean
+  /** Solicitações pendentes da empresa (só para administrador; senão 0) */
+  pendentes: number
 }
 
 /** Linha de public.listar_usuarios_empresa() */

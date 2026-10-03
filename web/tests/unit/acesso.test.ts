@@ -11,6 +11,7 @@ const ativo: Vinculo = {
   aprovado: true,
   ativo: true,
   empresa_ativa: true,
+  pendentes: 0,
 }
 const admin: Vinculo = { ...ativo, tipo_acesso: 'administrador' }
 const pendente: Vinculo = { ...ativo, aprovado: false }

@@ -11,6 +11,10 @@ const props = withDefaults(
   { variante: 'primario', type: 'button' },
 )
 
+// Antes da hidratação, um submit faria envio nativo do formulário (recarrega e perde os dados)
+const montado = ref(false)
+onMounted(() => (montado.value = true))
+
 const classes = computed(
   () =>
     ({
@@ -25,7 +29,7 @@ const classes = computed(
 <template>
   <button
     :type="type"
-    :disabled="disabled || carregando"
+    :disabled="disabled || carregando || (type === 'submit' && !montado)"
     class="inline-flex items-center justify-center gap-2 rounded-card text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60"
     :class="classes"
   >

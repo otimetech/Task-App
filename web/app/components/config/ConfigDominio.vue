@@ -48,7 +48,9 @@ async function alterar() {
     <form class="mt-4 space-y-3" @submit.prevent="pedirConfirmacao">
       <FormField rotulo="Novo subdomínio" :erro="erroCampo">
         <TextInput v-model="novo" required placeholder="minha-empresa" />
-        <span class="mt-1 block text-xs text-ink-muted">{{ novo || 'minha-empresa' }}.{{ config.public.baseDomain }}</span>
+        <template #extra>
+          <span class="mt-1 block text-xs text-ink-muted">{{ novo || 'minha-empresa' }}.{{ config.public.baseDomain }}</span>
+        </template>
       </FormField>
       <AppButton type="submit" variante="secundario">Alterar subdomínio</AppButton>
     </form>
