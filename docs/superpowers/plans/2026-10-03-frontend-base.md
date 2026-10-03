@@ -17,7 +17,7 @@
 - Após cada task: nova linha em `PROJETO.md` → "Histórico de alterações" e checklist da Fase 2 atualizado, no mesmo commit.
 - Cores de status (`success-*`, `danger-*`, `warning-*`) nunca mudam por tenant; só `brand-*`.
 - Domínio base do banco: `manutgo.otimetech.com.br` (constante `DOMINIO_BASE_BANCO`). Domínio servido pelo app: `NUXT_PUBLIC_BASE_DOMAIN` (`localhost` em dev, `manutgo.otimetech.com.br` em produção).
-- Nome da plataforma exibido na raiz: `NUXT_PUBLIC_APP_NAME` (padrão `ManutGO`, pendente de confirmação do responsável).
+- Nome da plataforma exibido na raiz: `ManutGO` (`NUXT_PUBLIC_APP_NAME`, confirmado pelo responsável em 2026-10-03).
 - Mensagens de erro de regra vêm do banco; o frontend não reescreve.
 - Erro de rede: texto exato `Não foi possível conectar. Tente novamente.`
 - Commits terminam com `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.

@@ -372,6 +372,7 @@ checklist_itens
 | 2026-10-03 | Login na raiz e no subdomínio, com sessão compartilhada (cookie do domínio `.manutgo.otimetech.com.br`) | Definição do responsável |
 | 2026-10-03 | Subdomínio sem vínculo ativo: tela de aviso com opções (solicitar acesso, minhas empresas, sair) | Definição do responsável |
 | 2026-10-03 | Telas sem modelo visual são derivadas dos tokens do `design.md` e registradas nele; aprovação ao ver rodando | Definição do responsável |
+| 2026-10-03 | Nome da plataforma: **ManutGO** (marca padrão na raiz e no login genérico) | Definição do responsável |
 | 2026-10-03 | Frontend em `web/`, Nuxt 4 SSR, `@nuxtjs/supabase`, Vitest. Spec: `docs/superpowers/specs/2026-10-03-frontend-base-design.md` | Aprovado pelo responsável |
 
 ---
@@ -493,3 +494,4 @@ Legenda: `[x]` concluído · `[ ]` pendente · `[~]` em andamento
 | 2026-10-03 | Decididos: SSR, domínio base `manutgo.otimetech.com.br` com subdomínio por empresa (escolhido pelo admin), raiz com login geral, campos de branding/assinatura. Migration `branding_dominios` (versão `20261003180455`) testada a seco (27/27) e aplicada: novos campos em `empresas`, tabela `empresa_dominios`, `criar_empresa` com subdomínio, RPCs `verificar_subdominio`, `alterar_subdominio`, `resolver_tenant` (anon) e `listar_minhas_empresas`. Fase 1 concluída, exceto P8 (manual). |
 | 2026-10-03 | Brainstorming do Frontend base: decididos login na raiz e no subdomínio com sessão compartilhada, tela de aviso para subdomínio sem vínculo, telas derivadas dos tokens, Nuxt 4 em `web/` com `@nuxtjs/supabase`. Spec escrita em `docs/superpowers/specs/2026-10-03-frontend-base-design.md` (inclui migration futura `storage_logos` e RPC `solicitar_acesso_empresa_por_id`). |
 | 2026-10-03 | Spec do Frontend base aprovada. Plano de implementação escrito em `docs/superpowers/plans/2026-10-03-frontend-base.md` (15 tasks). Nome exibido da plataforma configurável (`NUXT_PUBLIC_APP_NAME`, padrão `ManutGO`) — pendente de confirmação. |
+| 2026-10-03 | Nome da plataforma confirmado: ManutGO. |
